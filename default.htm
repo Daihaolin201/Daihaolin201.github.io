@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dennis Li | Personal Website</title>
+  <meta name="description" content="Personal website of Dennis Li: research, projects, updates, and contact." />
+  <style>
+    :root {
+      --bg-1: #d9ecff;
+      --bg-2: #eaf8ff;
+      --bg-3: #f6fbff;
+      --ink: #0f172a;
+      --muted: #334155;
+      --line: rgba(255, 255, 255, 0.58);
+      --glass: rgba(255, 255, 255, 0.38);
+      --glass-strong: rgba(255, 255, 255, 0.58);
+      --glass-edge: rgba(255, 255, 255, 0.76);
+      --accent: #0ea5e9;
+      --accent-2: #22d3ee;
+      --neon: #38bdf8;
+      --shadow: 0 22px 52px rgba(16, 58, 94, 0.16);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "SF Pro Display", "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 700px at 2% -10%, rgba(56, 189, 248, 0.32), transparent 55%),
+        radial-gradient(1000px 600px at 95% 8%, rgba(125, 211, 252, 0.28), transparent 56%),
+        linear-gradient(155deg, var(--bg-1), var(--bg-2) 48%, var(--bg-3));
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      z-index: -2;
+      border-radius: 999px;
+      filter: blur(10px);
+      pointer-events: none;
+      opacity: 0.88;
+      mix-blend-mode: screen;
+      animation: float 18s ease-in-out infinite alternate;
+    }
+
+    body::before {
+      width: 580px;
+      height: 580px;
+      left: -150px;
+      top: -170px;
+      background: radial-gradient(circle at 30% 30%, rgba(14, 165, 233, 0.5), rgba(147, 197, 253, 0.08));
+    }
+
+    body::after {
+      width: 660px;
+      height: 660px;
+      right: -220px;
+      top: 24%;
+      background: radial-gradient(circle at 40% 35%, rgba(34, 211, 238, 0.38), rgba(191, 219, 254, 0.06));
+      animation-delay: 0.8s;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.24;
+      background-image: radial-gradient(rgba(255,255,255,0.85) 0.45px, transparent 0.45px);
+      background-size: 3px 3px;
+    }
+
+    .ambient {
+      position: fixed;
+      inset: auto auto 8% 8%;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      z-index: -2;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.3), rgba(56, 189, 248, 0));
+      filter: blur(16px);
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+
+    .ambient--right {
+      inset: 22% 6% auto auto;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle at center, rgba(103, 232, 249, 0.26), rgba(103, 232, 249, 0));
+      animation-delay: 0.9s;
+    }
+
+    .spotlight {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.72;
+      mix-blend-mode: soft-light;
+      background: radial-gradient(240px circle at var(--mx, 72%) var(--my, 16%), rgba(255,255,255,0.86), rgba(255,255,255,0) 62%);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 2.2rem));
+      margin: 0 auto;
+      padding: 1.3rem 0 2.4rem;
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      grid-template-areas:
+        "nav nav"
+        "main aside";
+    }
+
+    .glass {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(132deg, rgba(255,255,255,0.76), rgba(255,255,255,0.33) 40%, rgba(219, 244, 255, 0.28) 100%),
+        linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.14));
+      border: 1px solid rgba(255, 255, 255, 0.56);
+      border-radius: var(--radius-xl);
+      box-shadow:
+        0 28px 60px rgba(16, 58, 94, 0.2),
+        0 8px 30px rgba(14, 165, 233, 0.16),
+        inset 0 1px 0 rgba(255,255,255,0.78),
+        inset 0 -1px 0 rgba(255,255,255,0.36);
+      -webkit-backdrop-filter: blur(34px) saturate(165%) contrast(108%);
+      backdrop-filter: blur(34px) saturate(165%) contrast(108%);
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      left: -18%;
+      top: -65%;
+      width: 55%;
+      height: 220%;
+      transform: rotate(18deg);
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0.3) 42%,
+        rgba(255, 255, 255, 0) 78%
+      );
+      pointer-events: none;
+      animation: sweep 9s ease-in-out infinite;
+    }
+
+    .glass::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        radial-gradient(200px 80px at 18% 0%, rgba(255,255,255,0.58), rgba(255,255,255,0)),
+        radial-gradient(260px 130px at 88% 100%, rgba(125, 211, 252, 0.16), rgba(125, 211, 252, 0));
+      border: 1px solid rgba(255,255,255,0.24);
+    }
+
+    .top-nav {
+      grid-area: nav;
+      padding: 0.75rem;
+      position: sticky;
+      top: 0.7rem;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 12px 34px rgba(8, 47, 73, 0.18), inset 0 1px 0 var(--glass-edge);
+    }
+
+    .brand {
+      font-weight: 650;
+      font-size: 0.88rem;
+      letter-spacing: 0.02em;
+      padding: 0.5rem 0.8rem;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.44);
+      border: 1px solid rgba(255,255,255,0.62);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.35rem;
+      justify-content: flex-end;
+      align-items: center;
+      min-width: 0;
+      flex-shrink: 1;
+    }
+
+    .menu a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 0.44rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      border: 1px solid transparent;
+      transition: all 220ms ease;
+      white-space: nowrap;
+    }
+
+    .menu a[aria-current="true"],
+    .menu a:hover {
+      border-color: rgba(14,165,233,0.45);
+      background: rgba(255,255,255,0.74);
+      box-shadow: 0 10px 24px rgba(56, 189, 248, 0.28), inset 0 1px 0 rgba(255,255,255,0.82);
+      transform: translateY(-1px);
+    }
+
+    main { grid-area: main; display: grid; gap: 0.95rem; }
+    aside { grid-area: aside; }
+
+    .section {
+      padding: 1.45rem;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: reveal 0.8s cubic-bezier(.22,.61,.36,1) forwards;
+      animation-delay: var(--delay, 0s);
+      transition: transform 260ms ease, box-shadow 260ms ease;
+    }
+
+    .section:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 30px 56px rgba(3, 37, 61, 0.2),
+        0 10px 34px rgba(14, 165, 233, 0.16),
+        inset 0 1px 0 rgba(255,255,255,0.82);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.03;
+      letter-spacing: -0.02em;
+      background: linear-gradient(110deg, #082f49 8%, #0369a1 52%, #0891b2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 8px 28px rgba(3, 105, 161, 0.2);
+    }
+
+    h2 {
+      margin: 0 0 0.65rem;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+      display: inline-block;
+      padding-bottom: 0.1rem;
+      border-bottom: 2px solid rgba(3, 105, 161, 0.2);
+    }
+
+    p, li { color: var(--muted); }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.44rem 0.74rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.52);
+      color: #0c4a6e;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+      white-space: nowrap;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+
+    .tag {
+      font-size: 0.78rem;
+      padding: 0.42rem 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.68);
+      background: linear-gradient(120deg, rgba(255,255,255,0.55), rgba(255,255,255,0.32));
+      color: #0f4568;
+    }
+
+    .cta-row {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.62rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      text-decoration: none;
+      color: #0f172a;
+      font-weight: 560;
+      padding: 0.58rem 0.95rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.7);
+      background: linear-gradient(150deg, rgba(255,255,255,0.88), rgba(255,255,255,0.52));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 24px rgba(2, 132, 199, 0.14);
+      transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.88), 0 14px 30px rgba(2, 132, 199, 0.3), 0 0 0 1px rgba(56,189,248,0.2);
+    }
+
+    ul { margin: 0.3rem 0 0; padding-left: 1.12rem; }
+    .pub { margin-top: 0.72rem; }
+    .pub-title { font-weight: 650; color: var(--ink); }
+    .exp-meta { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin: 0.15rem 0 0.5rem; }
+
+    .pub a,
+    .contact a {
+      color: #0369a1;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(3,105,161,0.26);
+    }
+
+    .pub a:hover,
+    .contact a:hover { border-bottom-color: rgba(3,105,161,0.62); }
+
+    .profile {
+      position: sticky;
+      top: 5.25rem;
+      padding: 1.2rem;
+      display: grid;
+      gap: 0.72rem;
+    }
+
+    .avatar-wrap {
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      margin: 0 auto;
+      padding: 3px;
+      background: linear-gradient(145deg, rgba(14,165,233,0.45), rgba(255,255,255,0.9));
+      box-shadow: 0 10px 24px rgba(2,132,199,0.2);
+    }
+
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #dbeafe;
+    }
+
+    .center { text-align: center; }
+    .small { font-size: 0.9rem; color: var(--muted); }
+
+    .quick {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.52rem;
+    }
+
+    .quick a {
+      text-align: center;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 0.86rem;
+      border-radius: 11px;
+      padding: 0.48rem 0.35rem;
+      border: 1px solid rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.48);
+    }
+
+    .quick a:hover { background: rgba(255,255,255,0.76); }
+    .quick a:focus-visible,
+    .btn:focus-visible,
+    .menu a:focus-visible {
+      outline: 2px solid rgba(14,165,233,0.55);
+      outline-offset: 2px;
+    }
+
+    .lang-selector {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .lang-btn {
+      font-size: 0.86rem;
+      padding: 0.48rem 0.82rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      border: 1px solid transparent;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 220ms ease;
+      font-family: inherit;
+    }
+
+    .lang-btn:hover {
+      border-color: rgba(14,165,233,0.45);
+      background: rgba(255,255,255,0.74);
+    }
+
+    .lang-dropdown {
+      position: fixed;
+      margin-top: 0;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(8, 47, 73, 0.22);
+      overflow: hidden;
+      z-index: 100;
+      min-width: 120px;
+      backdrop-filter: blur(12px);
+    }
+
+    .lang-option {
+      display: block;
+      width: 100%;
+      padding: 0.58rem 0.95rem;
+      border: none;
+      background: transparent;
+      color: var(--ink);
+      font-size: 0.84rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background 150ms ease;
+      font-family: inherit;
+    }
+
+    .lang-option:hover {
+      background: rgba(14, 165, 233, 0.12);
+    }
+
+    .lang-option.active {
+      background: rgba(14, 165, 233, 0.18);
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #475569;
+      margin-top: 0.25rem;
+      padding-bottom: 0.6rem;
+    }
+
+    @media (max-width: 940px) {
+      .container {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "nav"
+          "aside"
+          "main";
+      }
+
+      .profile { position: static; }
+      .top-nav { top: 0.55rem; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(1180px, calc(100% - 1.1rem)); }
+      .top-nav { padding: 0.6rem; }
+      .section { padding: 1.08rem; }
+      .brand { font-size: 0.92rem; }
+      .menu a { font-size: 0.82rem; padding: 0.42rem 0.68rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { animation: none !important; transition: none !important; }
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(18px) scale(1.04); }
+    }
+
+    @keyframes drift {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(18px, -16px, 0) scale(1.08); }
+    }
+
+    @keyframes sweep {
+      0%, 20% { transform: translateX(-10%) rotate(18deg); opacity: 0; }
+      34%, 58% { transform: translateX(118%) rotate(18deg); opacity: 1; }
+      100% { transform: translateX(118%) rotate(18deg); opacity: 0; }
+    }
+
+    @keyframes reveal {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="ambient ambient--right" aria-hidden="true"></div>
+  <div class="spotlight" id="spotlight" aria-hidden="true"></div>
+
+  <div class="container">
+    <nav class="top-nav glass" aria-label="Primary navigation">
+      <div class="brand">Donglin Li (Dennis)</div>
+      <div class="menu" id="menu">
+        <a href="#about">About</a>
+        <a href="#research">Research</a>
+        <a href="#projects">Projects</a>
+        <a href="#awards">Awards</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+
+    <aside>
+      <section class="profile glass section" style="--delay: 0.06s;">
+        <div class="avatar-wrap">
+          <img class="avatar" src="images/avatar.jpg" alt="Portrait photo" />
+        </div>
+        <div class="center">
+          <h2 style="margin-bottom: 0.2rem;">Donglin Li (Dennis)</h2>
+          <div class="small">PhD Candidate (2024-present)</div>
+          <div class="small">EEE PhD Student Rep (2024-present)</div>
+          <div class="small">EEE, The University of Manchester</div>
+        </div>
+
+        <div class="quick">
+          <a href="files/CV_public.html" target="_blank" rel="noopener">CV</a>
+          <a href="#contact">Email</a>
+          <a href="https://github.com/Daihaolin201" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.linkedin.com/in/donglin-li-55424326b" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="#publications">Updates</a>
+        </div>
+      </section>
+    </aside>
+
+    <main>
+      <section class="section glass" id="about" style="--delay: 0.1s;">
+        <div class="hero-top">
+          <h1>Building robust multi-agent intelligence for real-world systems.</h1>
+          <span class="badge">Available for collaboration</span>
+        </div>
+        <p>
+          I am a PhD researcher in Electrical and Electronic Engineering (Control, Robotics and AI) at The University of Manchester (2024-present), where I also completed my BEng in Electrical and Electronics Engineering with First Class Honours (2021-2024).
+          My work focuses on distributed control, multi-robot coordination, and uncertainty-aware decision-making for autonomous systems.
+          I also support teaching in control and robotics related courses as a Graduate Teaching Assistant, and serve as the EEE PhD Student Representative (Department Leader, 2024-present).
+        </p>
+
+        <div class="tag-row">
+          <span class="tag">Distributed Control</span>
+          <span class="tag">Multi-Robot Systems</span>
+          <span class="tag">Consensus &amp; Formation</span>
+          <span class="tag">Active Source Seeking</span>
+          <span class="tag">Dual Control</span>
+        </div>
+
+        <div class="cta-row">
+          <a class="btn" href="#publications">View Updates</a>
+          <a class="btn" href="files/CV_public.html" target="_blank" rel="noopener">Download CV</a>
+        </div>
+      </section>
+
+      <section class="section glass" id="research" style="--delay: 0.16s;">
+        <h2>Research Interests</h2>
+        <ul>
+          <li>Dual control for exploration-exploitation in autonomous source seeking.</li>
+          <li>Distributed and robust consensus control for multi-agent systems.</li>
+          <li>Multi-robot cooperative search with perception-aware planning.</li>
+          <li>Control and robotics experimentation with embedded platforms (STM32/ESP32/PLC).</li>
+        </ul>
+      </section>
+
+      <section class="section glass" id="publications" style="--delay: 0.22s;">
+        <h2>Research Updates</h2>
+
+        <div class="pub">
+          <div class="pub-title">Current Status</div>
+          <p>I am currently focusing on ongoing projects and manuscript preparation. Formal publications will be listed here once available.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">Recent Outputs (2024-2026)</div>
+          <p>Presented algorithm design and experimental findings in lab/poster sessions at The University of Manchester.</p>
+        </div>
+      </section>
+
+      <section class="section glass" id="projects" style="--delay: 0.28s;">
+        <h2>Projects</h2>
+
+        <div class="pub">
+          <div class="pub-title">Dual Control for Exploration &amp; Exploitation (DCEE) in Autonomous Source Seeking (Sept 2024–present)</div>
+          <p>Investigated uncertainty-aware decision-making for autonomous source seeking using DCEE. Designed multi-robot cooperative search algorithms for efficient coordination and target localisation. Contributed to a research paper on cooperative DCEE strategies; presented findings at RAICO lab poster sessions.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">Hack-a-Bot Robotics Challenge (Mar 2025)</div>
+          <p>UoM &amp; Sony joint hackathon. Built a full robotics platform in 24 hours: OpenCV vision pipeline (filtering, binarisation), A* path planning with dynamic re-routing, ArUco marker localisation, and PID trajectory tracking. Achieved a complete autonomous delivery cycle from any start point.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">Smart Traffic Cones Swarm Control (Sept 2023–May 2024)</div>
+          <p>Designed an ESP32-based robot control board with group robot control and Zigbee communication. Integrated ultrasonic sensors, motor drivers, and developed firmware for ESP32 and STM32.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">ESP Buggy — STM32 Autonomous Tracking Car (Sept 2022–May 2023)</div>
+          <p>Led design of an STM32-based automatic tracking car as team lead: circuit design, PCB layout, hardware integration, PID-based control, and dual feedback system. Managed project planning and task allocation.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">UoM &amp; NVIDIA PuzzleThon — Computer Vision (Mar–Apr 2024)</div>
+          <p>Developed computer vision and deep learning functions for an autonomous line-tracking car using Python and ROS. Trained deep learning models to detect and respond to traffic signals from on-board cameras.</p>
+        </div>
+      </section>
+
+      <section class="section glass" id="awards" style="--delay: 0.32s;">
+        <h2>Honours &amp; Awards</h2>
+
+        <div class="pub">
+          <div class="pub-title">🥇 2025 — First Place Poster Prize, EEE Postgraduate Research Conference</div>
+          <p>Department of Electrical and Electronic Engineering, The University of Manchester. November 2025.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">🥇 2025 — First Prize, Hack-a-Bot Robotics Challenge</div>
+          <p>The University of Manchester &amp; Sony joint hackathon. March 2025.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">🥈 2024 — Second Prize, NVIDIA PuzzleThon</div>
+          <p>The University of Manchester &amp; NVIDIA. March 2024.</p>
+        </div>
+
+        <div class="pub">
+          <div class="pub-title">🥉 2023 — Third Prize, ESP Buggy Development</div>
+          <p>The University of Manchester. May 2023.</p>
+        </div>
+      </section>
+
+      <section class="section glass contact" id="contact" style="--delay: 0.4s;">
+        <h2>Contact</h2>
+        <ul>
+          <li>University Email: <a href="mailto:Donglin.Li@Manchester.ac.uk">Donglin.Li@Manchester.ac.uk</a></li>
+          <li>Personal Email: <a href="mailto:Dennis.Li201@outlook.com">Dennis.Li201@outlook.com</a></li>
+          <li>Affiliation: Department of Electrical and Electronic Engineering, The University of Manchester</li>
+          <li>Website: <a href="https://Daihaolin201.github.io" target="_blank" rel="noopener">Daihaolin201.github.io</a></li>
+          <li>GitHub: <a href="https://github.com/Daihaolin201" target="_blank" rel="noopener">github.com/Daihaolin201</a></li>
+          <li>LinkedIn: <a href="https://www.linkedin.com/in/donglin-li-55424326b" target="_blank" rel="noopener">linkedin.com/in/donglin-li-55424326b</a></li>
+        </ul>
+      </section>
+
+      <footer>
+        <span id="footer-text">2026 Donglin Li (Dennis) · Crafted with a liquid-glass inspired interface.</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script>
+    i18n.init();
+    i18n.createSelector();
+
+    const sections = ["about", "research", "projects", "awards", "contact"];
+    const menuMap = new Map(
+      sections.map((id) => [id, document.querySelector(`.menu a[href="#${id}"]`)])
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let current = null;
+        let maxRatio = 0;
+
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio;
+            current = entry.target.id;
+          }
+        }
+
+        if (!current) return;
+
+        for (const [id, link] of menuMap.entries()) {
+          if (!link) continue;
+          link.setAttribute("aria-current", id === current ? "true" : "false");
+        }
+      },
+      {
+        rootMargin: "-20% 0px -55% 0px",
+        threshold: [0.2, 0.45, 0.7],
+      }
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    const root = document.documentElement;
+    window.addEventListener("pointermove", (event) => {
+      const x = (event.clientX / window.innerWidth) * 100;
+      const y = (event.clientY / window.innerHeight) * 100;
+      root.style.setProperty("--mx", `${x}%`);
+      root.style.setProperty("--my", `${y}%`);
+    });
+  </script>
+</body>
+</html>
