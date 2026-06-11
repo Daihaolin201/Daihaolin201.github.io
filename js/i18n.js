@@ -11,7 +11,7 @@ const i18n = {
         affiliation: "曼彻斯特大学 电气与电子工程学院",
         cv: "简历", email: "邮箱", github: "代码库", linkedin: "领英", updates: "动态"
       },
-      hero: { tagline: "为真实世界系统构建鲁棒的多智能体智能。", badge: "欢迎合作", kicker: "博士 · 控制、机器人与人工智能 · 曼彻斯特大学" },
+      hero: { tagline: "让多机器人系统在真实世界中稳健协作。", badge: "欢迎合作", kicker: "博士 · 控制、机器人与人工智能 · 曼彻斯特大学" },
       stats: { papers: "第一作者论文", awards: "奖项", honours: "一等荣誉学位" },
       about: {
         title: "关于我",
