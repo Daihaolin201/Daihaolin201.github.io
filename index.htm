@@ -58,9 +58,9 @@
 
     /* ---- ambient layers ---- */
     #agents {
-      position: fixed; inset: 0; z-index: 0;
+      position: fixed; inset: 0; z-index: 9;   /* above the glass panels (z2) so the swarm flies over content */
       width: 100vw; height: 100vh; max-width: 100vw;
-      pointer-events: none; opacity: 0.9;
+      pointer-events: none; opacity: 0.95;
     }
     .grid {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -117,7 +117,11 @@
     /* ---- nav ---- */
     .top-nav {
       grid-area: nav;
-      position: sticky; top: 0.8rem; z-index: 30;
+      /* fixed, not sticky: as a grid item the nav's row is exactly its own height,
+         so sticky has no room to stick and the menu scrolls away */
+      position: fixed; top: 0.8rem; left: 50%; transform: translateX(-50%);
+      width: min(1200px, calc(100% - 2.2rem));
+      z-index: 30;
       display: flex; align-items: center; justify-content: space-between;
       gap: 0.75rem; padding: 0.6rem 0.75rem;
       border-radius: 16px;
@@ -691,6 +695,16 @@
     window.addEventListener("scroll", updateProgress, { passive: true });
     updateProgress();
 
+    /* ---- keep content clear of the fixed nav (height varies with wrap / language) ---- */
+    const fixedNav = document.querySelector(".top-nav");
+    const containerEl = document.querySelector(".container");
+    function padForNav() {
+      if (fixedNav && containerEl) containerEl.style.paddingTop = (fixedNav.offsetHeight + 22) + "px";
+    }
+    padForNav();
+    window.addEventListener("load", padForNav);
+    if (window.ResizeObserver && fixedNav) new ResizeObserver(padForNav).observe(fixedNav);
+
     /* ---- cinematic layer: text decode, 3D tilt, magnetic CTAs, grid parallax ---- */
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -745,7 +759,7 @@
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [];
-      const N = Math.max(10, Math.min(18, Math.round(window.innerWidth / 95)));
+      const N = Math.max(12, Math.min(22, Math.round(window.innerWidth / 80)));
       const LINK = 150, SRC_LINK = 270;
       const rand = (a, b) => a + Math.random() * (b - a);
 
@@ -808,7 +822,7 @@
         for (let i = 0; i < agents.length; i++) {
           for (let j = i + 1; j < agents.length; j++) {
             const a = agents[i], b = agents[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-            if (d < LINK) { linkCount++; ctx.globalAlpha = (1 - d / LINK) * 0.22; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+            if (d < LINK) { linkCount++; ctx.globalAlpha = (1 - d / LINK) * 0.3; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
           }
         }
         for (const a of agents) { const d = Math.hypot(a.x - source.x, a.y - source.y); if (d < SRC_LINK) { ctx.globalAlpha = (1 - d / SRC_LINK) * 0.16; ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(source.x, source.y); ctx.stroke(); } }
@@ -824,7 +838,7 @@
           }
         }
         ctx.globalAlpha = 1;
-        for (const a of agents) { ctx.beginPath(); ctx.fillStyle = "#7dd3fc"; ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 8; ctx.arc(a.x, a.y, 2.3, 0, 6.2832); ctx.fill(); }
+        for (const a of agents) { ctx.beginPath(); ctx.fillStyle = "#7dd3fc"; ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 10; ctx.arc(a.x, a.y, 2.7, 0, 6.2832); ctx.fill(); }
         const pulse = 1 + Math.sin(frame * 0.06) * 0.28;
         ctx.beginPath(); ctx.fillStyle = "#c084fc"; ctx.shadowColor = "#a855f7"; ctx.shadowBlur = 26 * pulse; ctx.arc(source.x, source.y, 4.6 * pulse, 0, 6.2832); ctx.fill();
         ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.arc(source.x, source.y, 10 * pulse + 4, 0, 6.2832); ctx.stroke();
