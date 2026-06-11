@@ -760,7 +760,8 @@
       const ctx = canvas.getContext("2d");
       let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [];
       const N = Math.max(12, Math.min(22, Math.round(window.innerWidth / 80)));
-      const LINK = 150, SRC_LINK = 270;
+      const LINK = 150, SRC_LINK = 270, SEP = 38;
+      const SPIN = Math.random() < 0.5 ? -1 : 1;   // whole-swarm vortex direction, random per visit
       const rand = (a, b) => a + Math.random() * (b - a);
 
       function resize() {
@@ -771,11 +772,16 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
       function init() {
-        agents = Array.from({ length: N }, () => ({ x: rand(0, W), y: rand(0, H), vx: rand(-0.3, 0.3), vy: rand(-0.3, 0.3), trail: [] }));
+        agents = Array.from({ length: N }, (_, i) => ({
+          x: rand(0, W), y: rand(0, H), vx: rand(-0.3, 0.3), vy: rand(-0.3, 0.3), trail: [],
+          ring: 46 + (i % 3) * 26 + rand(-6, 6),   // preferred standoff radius: three nested escort rings
+          dir: SPIN                                 // coherent vortex (same direction avoids head-on passes)
+        }));
         source = { x: W * 0.55, y: H * 0.4, tx: W * 0.55, ty: H * 0.4, t: 0, boost: 0 };
       }
       // click-to-deploy: the fx layer calls this to drop the signal source at a point
       window.__deployBeacon = (x, y) => { if (!source) return; source.tx = x; source.ty = y; source.t = 300; source.boost = 140; };
+      window.__swarm = () => ({ agents, source });   // debug/verification hook
       function step() {
         const ptr = window.__pointer;
         const tracking = ptr && ptr.active && ptr.y < H;   // swarm follows the cursor (source-seeking)
@@ -787,19 +793,36 @@
         const ease = tracking ? 0.05 : (source.boost > 0 ? (source.boost--, 0.045) : 0.01);
         source.x += (source.tx - source.x) * ease; source.y += (source.ty - source.y) * ease;
         for (const a of agents) {
-          let dx = source.x - a.x, dy = source.y - a.y, d = Math.hypot(dx, dy) || 1;
-          a.vx += (dx / d) * 0.02; a.vy += (dy / d) * 0.02;           // seek source
+          const dx = source.x - a.x, dy = source.y - a.y, d = Math.hypot(dx, dy) || 1;
+          const ux = dx / d, uy = dy / d;
+          // standoff-ring seek: spring toward this agent's escort radius, not the centre
+          const radial = Math.max(-0.06, Math.min(0.055, (d - a.ring) * 0.0018));
+          a.vx += ux * radial; a.vy += uy * radial;
+          // tangential circulation: orbit the source once nearby (rings counter-rotate)
+          const zone = a.ring * 2.4;
+          if (d < zone) {
+            const tng = 0.022 + 0.05 * (1 - d / zone);
+            a.vx += -uy * a.dir * tng; a.vy += ux * a.dir * tng;
+          }
           let cx = 0, cy = 0, n = 0;
-          for (const b of agents) { if (b === a) continue; const ex = b.x - a.x, ey = b.y - a.y, dd = ex * ex + ey * ey; if (dd < LINK * LINK) { cx += b.vx; cy += b.vy; n++; } }
-          if (n) { a.vx += (cx / n) * 0.05; a.vy += (cy / n) * 0.05; } // consensus / alignment
-          a.vx = a.vx * 0.96 + rand(-0.02, 0.02); a.vy = a.vy * 0.96 + rand(-0.02, 0.02);
-          const sp = Math.hypot(a.vx, a.vy), max = 1.35; if (sp > max) { a.vx = a.vx / sp * max; a.vy = a.vy / sp * max; }
+          for (const b of agents) {
+            if (b === a) continue;
+            const ex = b.x - a.x, ey = b.y - a.y, dd = ex * ex + ey * ey;
+            if (dd < LINK * LINK) { cx += b.vx; cy += b.vy; n++; }
+            if (dd < SEP * SEP && dd > 0.01) {           // separation: keep safe spacing, no clumping
+              const dl = Math.sqrt(dd), f = (1 - dl / SEP) * 0.16;
+              a.vx -= (ex / dl) * f; a.vy -= (ey / dl) * f;
+            }
+          }
+          if (n) { a.vx += (cx / n) * 0.03; a.vy += (cy / n) * 0.03; } // consensus / alignment
+          a.vx = a.vx * 0.965 + rand(-0.02, 0.02); a.vy = a.vy * 0.965 + rand(-0.02, 0.02);
+          const sp = Math.hypot(a.vx, a.vy), max = 1.6; if (sp > max) { a.vx = a.vx / sp * max; a.vy = a.vy / sp * max; }
           a.x += a.vx; a.y += a.vy;
           let wrapped = false;
           if (a.x < -20) { a.x = W + 20; wrapped = true; } if (a.x > W + 20) { a.x = -20; wrapped = true; }
           if (a.y < -20) { a.y = H + 20; wrapped = true; } if (a.y > H + 20) { a.y = -20; wrapped = true; }
           if (wrapped) { a.trail.length = 0; }
-          else { a.trail.push(a.x, a.y); if (a.trail.length > 16) a.trail.splice(0, 2); }
+          else { a.trail.push(a.x, a.y); if (a.trail.length > 24) a.trail.splice(0, 2); }
         }
         // communication packets travelling along active links
         if (packets.length < 24 && Math.random() < 0.3) {
