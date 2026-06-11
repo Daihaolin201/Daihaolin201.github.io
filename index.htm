@@ -364,6 +364,10 @@
     .tag { transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease; }
     .tag:hover { transform: translateY(-2px); color: #eafdff; border-color: var(--edge-strong); background: rgba(34, 211, 238, 0.16); box-shadow: 0 6px 16px rgba(34, 211, 238, 0.18); }
 
+    /* ---- 3D tilt (driven by JS on fine pointers) ---- */
+    .profile { transition: transform .22s ease-out; }
+    .pub, .profile { transform-style: preserve-3d; }
+
     /* ---- avatar aura ---- */
     .avatar-wrap::before {
       content: ""; position: absolute; inset: -8px; border-radius: 50%; z-index: -1;
@@ -687,12 +691,59 @@
     window.addEventListener("scroll", updateProgress, { passive: true });
     updateProgress();
 
+    /* ---- cinematic layer: text decode, 3D tilt, magnetic CTAs, grid parallax ---- */
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    const SCRAMBLE = "!<>-_/[]{}=+*^?#$%&";
+    function decodeText(el, dur = 950) {
+      if (reduceMotion || !el) return;
+      const node = el.childNodes[0];
+      if (!node || node.nodeType !== 3) return;   // only scramble the text node; keep the caret span intact
+      const final = node.textContent;
+      const start = performance.now();
+      (function tick(now) {
+        const p = Math.min((now - start) / dur, 1);
+        const reveal = Math.floor(p * final.length);
+        let out = final.slice(0, reveal);
+        for (let i = reveal; i < final.length; i++) out += final[i] === " " ? " " : SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0];
+        node.textContent = out;
+        if (p < 1) requestAnimationFrame(tick); else node.textContent = final;
+      })(start);
+    }
+    const heroH1 = document.querySelector("#about h1");
+    decodeText(heroH1);
+    const _setLanguage = i18n.setLanguage.bind(i18n);
+    i18n.setLanguage = (lang) => { _setLanguage(lang); decodeText(heroH1); };
+
+    if (finePointer && !reduceMotion) {
+      document.querySelectorAll(".pub, .profile").forEach((el) => {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+          el.style.transform = `perspective(760px) rotateX(${(-py * 3.4).toFixed(2)}deg) rotateY(${(px * 4.6).toFixed(2)}deg)`;
+        });
+        el.addEventListener("pointerleave", () => { el.style.transform = ""; });
+      });
+      document.querySelectorAll(".btn").forEach((btn) => {
+        btn.addEventListener("pointermove", (e) => {
+          const r = btn.getBoundingClientRect();
+          btn.style.transform = `translate(${((e.clientX - r.left - r.width / 2) * 0.16).toFixed(1)}px, ${((e.clientY - r.top - r.height / 2) * 0.3).toFixed(1)}px)`;
+        });
+        btn.addEventListener("pointerleave", () => { btn.style.transform = ""; });
+      });
+    }
+
+    const gridLayer = document.querySelector(".grid");
+    window.addEventListener("scroll", () => {
+      if (gridLayer && !reduceMotion) gridLayer.style.backgroundPosition = `0 ${(-(window.scrollY * 0.12)).toFixed(1)}px`;
+    }, { passive: true });
+
     /* ---- multi-agent consensus / source-seeking canvas ---- */
     (function () {
       const canvas = document.getElementById("agents");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0;
+      let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [];
       const N = Math.max(10, Math.min(18, Math.round(window.innerWidth / 95)));
       const LINK = 150, SRC_LINK = 270;
       const rand = (a, b) => a + Math.random() * (b - a);
@@ -733,13 +784,28 @@
           if (wrapped) { a.trail.length = 0; }
           else { a.trail.push(a.x, a.y); if (a.trail.length > 16) a.trail.splice(0, 2); }
         }
+        // communication packets travelling along active links
+        if (packets.length < 24 && Math.random() < 0.3) {
+          const a = agents[(Math.random() * agents.length) | 0];
+          if (Math.hypot(a.x - source.x, a.y - source.y) < SRC_LINK) {
+            packets.push({ fa: a, fb: source, t: 0, sp: rand(0.015, 0.03), c: "#c084fc", max: SRC_LINK });
+          } else {
+            const b = agents[(Math.random() * agents.length) | 0];
+            if (b !== a && Math.hypot(a.x - b.x, a.y - b.y) < LINK) packets.push({ fa: a, fb: b, t: 0, sp: rand(0.02, 0.045), c: "#22d3ee", max: LINK });
+          }
+        }
+        for (let i = packets.length - 1; i >= 0; i--) {
+          const p = packets[i]; p.t += p.sp;
+          if (p.t >= 1 || Math.hypot(p.fa.x - p.fb.x, p.fa.y - p.fb.y) > p.max * 1.25) packets.splice(i, 1); // done or link broken/wrapped
+        }
       }
       function draw() {
         ctx.clearRect(0, 0, W, H);
+        let linkCount = 0;
         for (let i = 0; i < agents.length; i++) {
           for (let j = i + 1; j < agents.length; j++) {
             const a = agents[i], b = agents[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-            if (d < LINK) { ctx.globalAlpha = (1 - d / LINK) * 0.22; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+            if (d < LINK) { linkCount++; ctx.globalAlpha = (1 - d / LINK) * 0.22; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
           }
         }
         for (const a of agents) { const d = Math.hypot(a.x - source.x, a.y - source.y); if (d < SRC_LINK) { ctx.globalAlpha = (1 - d / SRC_LINK) * 0.16; ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(source.x, source.y); ctx.stroke(); } }
@@ -760,6 +826,49 @@
         ctx.beginPath(); ctx.fillStyle = "#c084fc"; ctx.shadowColor = "#a855f7"; ctx.shadowBlur = 26 * pulse; ctx.arc(source.x, source.y, 4.6 * pulse, 0, 6.2832); ctx.fill();
         ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.arc(source.x, source.y, 10 * pulse + 4, 0, 6.2832); ctx.stroke();
         ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        // communication packets
+        for (const p of packets) {
+          const x = p.fa.x + (p.fb.x - p.fa.x) * p.t, y = p.fa.y + (p.fb.y - p.fa.y) * p.t;
+          ctx.globalAlpha = 0.85 * (1 - Math.abs(p.t - 0.5) * 0.7);
+          ctx.fillStyle = p.c; ctx.shadowColor = p.c; ctx.shadowBlur = 7;
+          ctx.beginPath(); ctx.arc(x, y, 1.7, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        drawBelief();
+        drawHUD(linkCount);
+      }
+      // swarm belief: 1-sigma covariance ellipse of agent positions (marching-ants) + centroid crosshair
+      function drawBelief() {
+        const n = agents.length; if (n < 3) return;
+        let mx = 0, my = 0;
+        for (const a of agents) { mx += a.x; my += a.y; } mx /= n; my /= n;
+        let sxx = 0, syy = 0, sxy = 0;
+        for (const a of agents) { const dx = a.x - mx, dy = a.y - my; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; }
+        sxx /= n; syy /= n; sxy /= n;
+        const tr = sxx + syy, det = sxx * syy - sxy * sxy;
+        const disc = Math.sqrt(Math.max(tr * tr / 4 - det, 0));
+        const l1 = Math.max(tr / 2 + disc, 1), l2 = Math.max(tr / 2 - disc, 1);
+        const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+        ctx.save();
+        ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1;
+        ctx.setLineDash([5, 7]); ctx.lineDashOffset = -frame * 0.35; ctx.globalAlpha = 0.3;
+        ctx.beginPath(); ctx.ellipse(mx, my, Math.sqrt(l1) * 1.3, Math.sqrt(l2) * 1.3, ang, 0, 6.2832); ctx.stroke();
+        ctx.setLineDash([]); ctx.globalAlpha = 0.42;
+        ctx.beginPath(); ctx.moveTo(mx - 7, my); ctx.lineTo(mx + 7, my); ctx.moveTo(mx, my - 7); ctx.lineTo(mx, my + 7); ctx.stroke();
+        ctx.restore();
+      }
+      // live telemetry readout (desktop only)
+      function drawHUD(linkCount) {
+        if (W < 700) return;
+        let md = 0;
+        for (const a of agents) md += Math.hypot(a.x - source.x, a.y - source.y);
+        md /= agents.length;
+        const lock = Math.max(0, Math.min(99, Math.round((1 - md / (SRC_LINK * 1.4)) * 100)));
+        ctx.font = '10px ui-monospace, "SF Mono", Menlo, monospace';
+        ctx.fillStyle = "rgba(125, 178, 255, 0.5)";
+        ctx.fillText("◤ SWARM TELEMETRY — DCEE SIM", 18, H - 44);
+        ctx.fillStyle = "rgba(125, 178, 255, 0.36)";
+        ctx.fillText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   SRC-LOCK ${String(lock).padStart(2, "0")}%`, 18, H - 30);
       }
       function loop() { frame++; step(); draw(); raf = requestAnimationFrame(loop); }
       function start() { if (!raf && !reduceMotion) loop(); }
