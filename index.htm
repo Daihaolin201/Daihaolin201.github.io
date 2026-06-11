@@ -640,6 +640,34 @@
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    /* ---- boot sequence: one-shot mission-control intro (skippable, once per session) ---- */
+    (function () {
+      let seen = null;
+      try { seen = sessionStorage.getItem("boot-seen"); } catch (e) {}
+      if (reduceMotion || seen) return;
+      try { sessionStorage.setItem("boot-seen", "1"); } catch (e) {}
+      const o = document.createElement("div");
+      o.id = "boot"; o.setAttribute("aria-hidden", "true");
+      o.style.cssText = "position:fixed;inset:0;z-index:80;background:#04070f;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;cursor:pointer;";
+      o.innerHTML = '<pre style="font-family:var(--mono);font-size:12px;line-height:1.8;color:#7dd3fc;margin:0;text-shadow:0 0 14px rgba(34,211,238,.45)"></pre>';
+      document.body.appendChild(o);
+      const pre = o.querySelector("pre");
+      const lines = [
+        "◤ DENNIS.LI — SWARM CONSOLE v2",
+        "> spawning agents ............ OK",
+        "> mesh link / consensus ...... OK",
+        "> bayesian belief filter ..... OK",
+        "> source-seeking online — welcome."
+      ];
+      let li = 0;
+      (function next() {
+        if (!o.isConnected) return;
+        if (li < lines.length) { pre.textContent += (li ? "\n" : "") + lines[li++]; setTimeout(next, 130); }
+        else setTimeout(() => { o.style.opacity = "0"; setTimeout(() => o.remove(), 500); }, 380);
+      })();
+      o.addEventListener("pointerdown", () => o.remove());
+    })();
+
     /* ---- scroll reveal + stat count-up ---- */
     const reveal = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
@@ -758,7 +786,7 @@
       const canvas = document.getElementById("agents");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [];
+      let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [], pulses = [], fps = 60, lastT = 0;
       const N = Math.max(12, Math.min(22, Math.round(window.innerWidth / 80)));
       const LINK = 150, SRC_LINK = 270, SEP = 38;
       const SPIN = Math.random() < 0.5 ? -1 : 1;   // whole-swarm vortex direction, random per visit
@@ -781,7 +809,16 @@
       }
       // click-to-deploy: the fx layer calls this to drop the signal source at a point
       window.__deployBeacon = (x, y) => { if (!source) return; source.tx = x; source.ty = y; source.t = 300; source.boost = 140; };
-      window.__swarm = () => ({ agents, source });   // debug/verification hook
+      // double-click scatter: impulse away from the point, brief speed-cap lift, then the rings regroup
+      window.__scatter = (x, y) => {
+        for (const a of agents) {
+          const dx = a.x - x, dy = a.y - y, d = Math.hypot(dx, dy) || 1;
+          const k = Math.max(0.25, 1 - d / 460) * 7;
+          a.vx += (dx / d) * k; a.vy += (dy / d) * k;
+          a.burst = 36;
+        }
+      };
+      window.__swarm = () => ({ agents, source, pulses });   // debug/verification hook
       function step() {
         const ptr = window.__pointer;
         const tracking = ptr && ptr.active && ptr.y < H;   // swarm follows the cursor (source-seeking)
@@ -816,7 +853,7 @@
           }
           if (n) { a.vx += (cx / n) * 0.03; a.vy += (cy / n) * 0.03; } // consensus / alignment
           a.vx = a.vx * 0.965 + rand(-0.02, 0.02); a.vy = a.vy * 0.965 + rand(-0.02, 0.02);
-          const sp = Math.hypot(a.vx, a.vy), max = 1.6; if (sp > max) { a.vx = a.vx / sp * max; a.vy = a.vy / sp * max; }
+          const sp = Math.hypot(a.vx, a.vy), max = a.burst > 0 ? (a.burst--, 4) : 1.6; if (sp > max) { a.vx = a.vx / sp * max; a.vy = a.vy / sp * max; }
           a.x += a.vx; a.y += a.vy;
           let wrapped = false;
           if (a.x < -20) { a.x = W + 20; wrapped = true; } if (a.x > W + 20) { a.x = -20; wrapped = true; }
@@ -837,6 +874,15 @@
         for (let i = packets.length - 1; i >= 0; i--) {
           const p = packets[i]; p.t += p.sp;
           if (p.t >= 1 || Math.hypot(p.fa.x - p.fb.x, p.fa.y - p.fb.y) > p.max * 1.25) packets.splice(i, 1); // done or link broken/wrapped
+        }
+        // sonar sensing pulses: a random agent occasionally pings its surroundings
+        if (pulses.length < 5 && Math.random() < 0.014) {
+          const a = agents[(Math.random() * agents.length) | 0];
+          pulses.push({ x: a.x, y: a.y, r: 4, life: 1 });
+        }
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          const g = pulses[i]; g.r += 1.7; g.life -= 0.016;
+          if (g.life <= 0) pulses.splice(i, 1);
         }
       }
       function draw() {
@@ -874,8 +920,38 @@
           ctx.beginPath(); ctx.arc(x, y, 1.7, 0, 6.2832); ctx.fill();
         }
         ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        // sonar pulses
+        for (const g of pulses) {
+          ctx.globalAlpha = g.life * 0.32; ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.2832); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
         drawBelief();
-        drawHUD(linkCount);
+        // shared lock metric: how converged the swarm is on the source
+        let md = 0;
+        for (const a of agents) md += Math.hypot(a.x - source.x, a.y - source.y);
+        md /= agents.length;
+        const lock = Math.max(0, Math.min(99, Math.round((1 - md / (SRC_LINK * 1.4)) * 100)));
+        if (lock >= 70) drawReticle();
+        drawHUD(linkCount, lock);
+      }
+      // rotating target-lock reticle around the source once the swarm converges
+      function drawReticle() {
+        const rr = 24 + 5 * Math.sin(frame * 0.08);
+        ctx.save();
+        ctx.translate(source.x, source.y); ctx.rotate(frame * 0.02);
+        ctx.strokeStyle = "#34d399"; ctx.globalAlpha = 0.8; ctx.lineWidth = 1.2;
+        for (let k = 0; k < 4; k++) {
+          ctx.beginPath(); ctx.arc(0, 0, rr, k * 1.5708 + 0.2, k * 1.5708 + 1.37); ctx.stroke();
+        }
+        for (let k = 0; k < 4; k++) {
+          const ang = k * 1.5708;
+          ctx.beginPath(); ctx.moveTo(Math.cos(ang) * (rr - 5), Math.sin(ang) * (rr - 5)); ctx.lineTo(Math.cos(ang) * (rr + 5), Math.sin(ang) * (rr + 5)); ctx.stroke();
+        }
+        ctx.restore();
+        ctx.fillStyle = "#34d399"; ctx.globalAlpha = 0.85; ctx.font = '9px ui-monospace, "SF Mono", Menlo, monospace';
+        ctx.fillText("LOCK", source.x + rr + 9, source.y + 3);
+        ctx.globalAlpha = 1;
       }
       // swarm belief: 1-sigma covariance ellipse of agent positions (marching-ants) + centroid crosshair
       function drawBelief() {
@@ -898,19 +974,23 @@
         ctx.restore();
       }
       // live telemetry readout (desktop only)
-      function drawHUD(linkCount) {
+      function drawHUD(linkCount, lock) {
         if (W < 700) return;
-        let md = 0;
-        for (const a of agents) md += Math.hypot(a.x - source.x, a.y - source.y);
-        md /= agents.length;
-        const lock = Math.max(0, Math.min(99, Math.round((1 - md / (SRC_LINK * 1.4)) * 100)));
         ctx.font = '10px ui-monospace, "SF Mono", Menlo, monospace';
         ctx.fillStyle = "rgba(125, 178, 255, 0.5)";
-        ctx.fillText("◤ SWARM TELEMETRY — DCEE SIM · CLICK TO DEPLOY SOURCE", 18, H - 44);
+        ctx.fillText("◤ SWARM TELEMETRY — DCEE SIM · CLICK: DEPLOY SOURCE · 2×CLICK: SCATTER", 18, H - 44);
+        const clock = new Date().toISOString().substr(11, 8);
         ctx.fillStyle = "rgba(125, 178, 255, 0.36)";
-        ctx.fillText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   SRC-LOCK ${String(lock).padStart(2, "0")}%`, 18, H - 30);
+        ctx.fillText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   UTC ${clock}   FPS ${Math.round(fps)}   SRC-LOCK `, 18, H - 30);
+        const w = ctx.measureText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   UTC ${clock}   FPS ${Math.round(fps)}   SRC-LOCK `).width;
+        ctx.fillStyle = lock >= 70 ? "rgba(52, 211, 153, 0.85)" : "rgba(125, 178, 255, 0.36)";
+        ctx.fillText(`${String(lock).padStart(2, "0")}%${lock >= 70 ? " ◉ LOCKED" : ""}`, 18 + w, H - 30);
       }
-      function loop() { frame++; step(); draw(); raf = requestAnimationFrame(loop); }
+      function loop(t) {
+        if (lastT && t) fps = fps * 0.95 + Math.min(1000 / (t - lastT), 120) * 0.05;
+        if (t) lastT = t;
+        frame++; step(); draw(); raf = requestAnimationFrame(loop);
+      }
       function start() { if (!raf && !reduceMotion) loop(); }
       function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
 
@@ -956,8 +1036,22 @@
           if (parts.length > 140) parts.splice(0, parts.length - 140);
         }, { passive: true });
       }
+      let lastDown = 0;
       document.addEventListener("pointerdown", (e) => {
         if (e.target.closest("a, button, input, select, textarea")) return;
+        const now = performance.now(), dbl = now - lastDown < 350;
+        lastDown = now;
+        if (dbl) {
+          // double-click: shockwave + scatter the swarm
+          rings.push({ x: e.clientX, y: e.clientY, r: 6, life: 1, sp: 8 });
+          for (let i = 0; i < 22; i++) {
+            const a = Math.PI * 2 * i / 22, s = 3 + Math.random() * 3.5;
+            parts.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+              life: 1, r: 1.6 + Math.random() * 1.8, c: i % 2 ? "#c084fc" : "#22d3ee" });
+          }
+          if (window.__scatter) window.__scatter(e.clientX, e.clientY);
+          return;
+        }
         rings.push({ x: e.clientX, y: e.clientY, r: 4, life: 1 });
         for (let i = 0; i < 14; i++) {
           const a = Math.PI * 2 * i / 14, s = 1.5 + Math.random() * 2.2;
@@ -978,7 +1072,7 @@
         fctx.shadowBlur = 0;
         for (let i = rings.length - 1; i >= 0; i--) {
           const g = rings[i];
-          g.r += 3.2; g.life -= 0.03;
+          g.r += g.sp || 3.2; g.life -= 0.03;
           if (g.life <= 0) { rings.splice(i, 1); continue; }
           fctx.globalAlpha = g.life * 0.6; fctx.strokeStyle = "#7dd3fc"; fctx.lineWidth = 1.5;
           fctx.beginPath(); fctx.arc(g.x, g.y, g.r, 0, 6.2832); fctx.stroke();
