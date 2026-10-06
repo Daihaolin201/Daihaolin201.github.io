@@ -1,1086 +1,174 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dennis Li | Multi-Agent Robotics & Control</title>
-  <meta name="description" content="Donglin (Dennis) Li — PhD researcher in control, robotics and AI. Distributed control, multi-robot coordination, and uncertainty-aware decision-making." />
-  <meta name="color-scheme" content="dark" />
-  <meta property="og:title" content="Donglin (Dennis) Li — Multi-Agent Robotics & Control" />
-  <meta property="og:description" content="PhD researcher building robust multi-agent intelligence for real-world systems." />
-  <meta property="og:type" content="website" />
-  <script>document.documentElement.classList.add('js');</script>
-  <style>
-    :root {
-      --bg: #060b18;
-      --bg-2: #0a1226;
-      --ink: #eaf0ff;
-      --muted: #9db0d6;
-      --faint: #6c7da3;
-      --cyan: #22d3ee;
-      --sky: #38bdf8;
-      --violet: #a855f7;
-      --panel: rgba(16, 26, 51, 0.55);
-      --panel-2: rgba(13, 21, 43, 0.66);
-      --edge: rgba(125, 178, 255, 0.16);
-      --edge-strong: rgba(125, 178, 255, 0.30);
-      --glow-cyan: rgba(34, 211, 238, 0.30);
-      --glow-violet: rgba(168, 85, 247, 0.26);
-      --radius-xl: 22px;
-      --radius-lg: 16px;
-      --mono: "SF Mono", "JetBrains Mono", "Fira Code", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
-      --sans: "SF Pro Display", "Inter", "Avenir Next", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: var(--sans);
-      color: var(--ink);
-      background: var(--bg);
-      scroll-behavior: smooth;
-      overflow-x: hidden;
-      max-width: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-      background:
-        radial-gradient(1200px 760px at 0% -8%, rgba(34, 211, 238, 0.14), transparent 60%),
-        radial-gradient(1100px 720px at 100% 0%, rgba(168, 85, 247, 0.16), transparent 58%),
-        radial-gradient(900px 700px at 50% 120%, rgba(56, 189, 248, 0.10), transparent 60%),
-        linear-gradient(180deg, var(--bg), var(--bg-2));
-    }
-
-    /* ---- ambient layers ---- */
-    #agents {
-      position: fixed; inset: 0; z-index: 9;   /* above the glass panels (z2) so the swarm flies over content */
-      width: 100vw; height: 100vh; max-width: 100vw;
-      pointer-events: none; opacity: 0.95;
-    }
-    .grid {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(125, 178, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(125, 178, 255, 0.05) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 78%);
-      -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 78%);
-    }
-    .vignette {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background: radial-gradient(120% 80% at 50% -10%, transparent 55%, rgba(2, 5, 14, 0.55) 100%);
-    }
-    .spotlight {
-      position: fixed; inset: 0; z-index: 25; pointer-events: none;
-      opacity: 0.55; mix-blend-mode: screen;
-      background: radial-gradient(380px circle at var(--mx, 72%) var(--my, 14%), rgba(56, 189, 248, 0.14), transparent 62%);
-    }
-
-    .container {
-      position: relative;
-      z-index: 2;
-      width: min(1200px, calc(100% - 2.2rem));
-      margin: 0 auto;
-      padding: 1.2rem 0 2.6rem;
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: 320px minmax(0, 1fr);
-      grid-template-areas:
-        "nav nav"
-        "aside main";
-    }
-
-    /* ---- glass panels ---- */
-    .glass {
-      position: relative;
-      background: var(--panel);
-      border: 1px solid var(--edge);
-      border-radius: var(--radius-xl);
-      -webkit-backdrop-filter: blur(18px) saturate(150%);
-      backdrop-filter: blur(18px) saturate(150%);
-      box-shadow:
-        0 24px 60px rgba(2, 6, 18, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    }
-    .glass::after {
-      content: ""; position: absolute; inset: 0; border-radius: inherit;
-      pointer-events: none;
-      background: linear-gradient(180deg, rgba(125, 178, 255, 0.08), transparent 40%);
-      opacity: 0.8;
-    }
-
-    /* ---- nav ---- */
-    .top-nav {
-      grid-area: nav;
-      /* fixed, not sticky: as a grid item the nav's row is exactly its own height,
-         so sticky has no room to stick and the menu scrolls away */
-      position: fixed; top: 0.8rem; left: 50%; transform: translateX(-50%);
-      width: min(1200px, calc(100% - 2.2rem));
-      z-index: 30;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 0.75rem; padding: 0.6rem 0.75rem;
-      border-radius: 16px;
-    }
-    .brand {
-      font-family: var(--mono);
-      font-size: 0.82rem; letter-spacing: 0.04em;
-      padding: 0.46rem 0.7rem; border-radius: 11px;
-      color: var(--ink);
-      background: rgba(34, 211, 238, 0.08);
-      border: 1px solid var(--edge);
-      white-space: nowrap; flex-shrink: 0;
-    }
-    .brand::before { content: "◈ "; color: var(--cyan); }
-    .menu { display: flex; flex-wrap: nowrap; gap: 0.3rem; align-items: center; justify-content: flex-end; min-width: 0; }
-    .menu a {
-      color: var(--muted); text-decoration: none;
-      font-size: 0.85rem; padding: 0.42rem 0.7rem; border-radius: 999px;
-      border: 1px solid transparent; white-space: nowrap;
-      transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
-    }
-    .menu a:hover, .menu a[aria-current="true"] {
-      color: var(--ink);
-      background: rgba(34, 211, 238, 0.12);
-      border-color: var(--edge-strong);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 22px rgba(34, 211, 238, 0.18);
-    }
-
-    main { grid-area: main; display: grid; gap: 0.95rem; align-content: start; }
-    aside { grid-area: aside; }
-
-    /* ---- reveal ---- */
-    .section { padding: 1.5rem 1.6rem; transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
-    .js .section { opacity: 0; transform: translateY(18px); }
-    .section.in { opacity: 1; transform: none; transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1); }
-    .section:hover { border-color: var(--edge-strong); box-shadow: 0 30px 70px rgba(2, 6, 18, 0.55), 0 0 0 1px rgba(34,211,238,0.06), inset 0 1px 0 rgba(255,255,255,0.07); }
-
-    /* ---- profile aside ---- */
-    .profile { position: sticky; top: 5.4rem; padding: 1.4rem 1.3rem; display: grid; gap: 0.85rem; text-align: center; }
-    .avatar-wrap {
-      width: 128px; height: 128px; border-radius: 50%; margin: 0.2rem auto 0;
-      padding: 3px; position: relative;
-      background: conic-gradient(from 0deg, var(--cyan), var(--violet), var(--sky), var(--cyan));
-      box-shadow: 0 0 32px rgba(34, 211, 238, 0.28);
-      animation: spin 14s linear infinite;
-    }
-    .avatar {
-      width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;
-      background-color: #0b1326; animation: spin 14s linear infinite reverse;
-      border: 3px solid var(--bg-2);
-    }
-    .profile h2 { border: 0; padding: 0; margin: 0.2rem 0 0; font-size: 1.18rem; }
-    .center { display: grid; gap: 0.18rem; }
-    .small { font-size: 0.84rem; color: var(--muted); }
-    .small:first-of-type { color: var(--cyan); font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.02em; }
-
-    .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.3rem; }
-    .quick a {
-      text-decoration: none; color: var(--ink); font-size: 0.84rem;
-      padding: 0.5rem 0.4rem; border-radius: 11px;
-      border: 1px solid var(--edge); background: rgba(125, 178, 255, 0.05);
-      transition: background .2s ease, border-color .2s ease, transform .2s ease;
-    }
-    .quick a:hover { background: rgba(34, 211, 238, 0.14); border-color: var(--edge-strong); transform: translateY(-1px); }
-    .quick a:nth-child(5) { grid-column: 1 / -1; }
-
-    /* ---- headings ---- */
-    .sec-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.7rem; }
-    .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.16em; color: var(--cyan); opacity: 0.85; }
-    h2 {
-      margin: 0; font-size: 1.28rem; letter-spacing: -0.01em; color: var(--ink);
-      border: 0; display: inline-block;
-    }
-    h2::after {
-      content: ""; display: block; height: 2px; margin-top: 0.35rem; width: 100%;
-      background: linear-gradient(90deg, var(--cyan), transparent);
-      border-radius: 2px; opacity: 0.7;
-    }
-
-    /* ---- hero ---- */
-    #about { padding: 1.9rem 1.7rem; }
-    .kicker { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--cyan); margin-bottom: 0.7rem; }
-    .kicker::before { content: "› "; opacity: 0.7; }
-    .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
-    h1 {
-      margin: 0; font-size: clamp(2.05rem, 4.2vw, 3.3rem); line-height: 1.04; letter-spacing: -0.025em;
-      background: linear-gradient(108deg, #eaf0ff 6%, #7dd3fc 48%, #c084fc 96%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .caret { color: var(--cyan); -webkit-text-fill-color: var(--cyan); animation: blink 1.15s steps(1) infinite; font-weight: 300; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      padding: 0.42rem 0.72rem; border-radius: 999px; font-size: 0.8rem;
-      color: #c8ffe9; background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.34); white-space: nowrap;
-      font-family: var(--mono); letter-spacing: 0.02em;
-    }
-    .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 10px #34d399; animation: pulse 1.8s ease-in-out infinite; }
-
-    p, li { color: var(--muted); line-height: 1.62; }
-    #about p { font-size: 1.02rem; margin: 1rem 0 0; max-width: 65ch; }
-
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; margin-top: 1.25rem; }
-    .stat {
-      padding: 0.85rem 0.9rem; border-radius: 14px;
-      border: 1px solid var(--edge); background: rgba(125, 178, 255, 0.04);
-    }
-    .stat-num { font-family: var(--mono); font-size: 1.7rem; font-weight: 600; line-height: 1;
-      background: linear-gradient(120deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .stat-label { display: block; margin-top: 0.4rem; font-size: 0.74rem; color: var(--faint); letter-spacing: 0.02em; }
-
-    .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.1rem; }
-    .tag {
-      font-family: var(--mono); font-size: 0.74rem; padding: 0.4rem 0.7rem; border-radius: 999px;
-      color: #bfe9ff; border: 1px solid var(--edge); background: rgba(34, 211, 238, 0.06);
-    }
-    .cta-row { margin-top: 1.25rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
-    .btn {
-      text-decoration: none; font-weight: 560; font-size: 0.9rem;
-      padding: 0.62rem 1.05rem; border-radius: 12px; transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-    .btn.primary { color: #04121c; background: linear-gradient(120deg, var(--cyan), var(--sky)); box-shadow: 0 10px 30px rgba(34, 211, 238, 0.32); }
-    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(34, 211, 238, 0.45); }
-    .btn.ghost { color: var(--ink); background: rgba(125, 178, 255, 0.06); border: 1px solid var(--edge-strong); }
-    .btn.ghost:hover { transform: translateY(-2px); background: rgba(168, 85, 247, 0.14); border-color: rgba(168,85,247,0.4); }
-
-    /* ---- lists & sub-cards ---- */
-    #research ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-    #research li {
-      position: relative; padding: 0.2rem 0 0.2rem 1.5rem; color: var(--muted);
-    }
-    #research li::before {
-      content: "▹"; position: absolute; left: 0; top: 0.18rem; color: var(--cyan);
-    }
-
-    .pub {
-      margin-top: 0.8rem; padding: 0.85rem 1rem 0.9rem 1.1rem;
-      border-radius: 14px; border: 1px solid var(--edge);
-      background: rgba(10, 18, 38, 0.5); position: relative; overflow: hidden;
-      transition: border-color .25s ease, transform .25s ease, background .25s ease;
-    }
-    .pub::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--cyan), var(--violet)); opacity: 0.85; }
-    .pub:hover { border-color: var(--edge-strong); transform: translateX(2px); background: rgba(13, 22, 46, 0.62); }
-    .pub-title { font-weight: 620; color: var(--ink); font-size: 0.98rem; }
-    .pub p { margin: 0.4rem 0 0; font-size: 0.9rem; }
-    .list { display: grid; gap: 0.7rem; }
-    .pub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; }
-    .org { font-family: var(--mono); font-size: 0.8rem; color: var(--cyan); margin-top: 0.2rem; opacity: 0.92; }
-    .chip { flex-shrink: 0; font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.22rem 0.55rem; border-radius: 999px; color: #04121c; background: linear-gradient(120deg, var(--cyan), var(--sky)); white-space: nowrap; box-shadow: 0 4px 14px rgba(34,211,238,0.25); }
-    .chip.ghost { color: var(--muted); background: rgba(125,178,255,0.08); border: 1px solid var(--edge); box-shadow: none; }
-    .groups { display: grid; gap: 0.2rem; }
-    .skill-row { display: grid; grid-template-columns: 168px 1fr; gap: 0.7rem; align-items: start; padding: 0.6rem 0; border-top: 1px solid rgba(125,178,255,0.09); }
-    .skill-row:first-child { border-top: 0; padding-top: 0.1rem; }
-    .skill-label { font-family: var(--mono); font-size: 0.82rem; color: var(--cyan); }
-    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    @media (max-width: 640px) { .skill-row { grid-template-columns: 1fr; gap: 0.35rem; } .pub-head { flex-wrap: wrap; } }
-
-    #projects .grid-cards { display: grid; gap: 0.7rem; }
-    @media (min-width: 720px) { #projects .grid-cards { grid-template-columns: 1fr 1fr; } #projects .pub { margin-top: 0; } }
-
-    .pub a, .contact a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid rgba(34, 211, 238, 0.3); }
-    .pub a:hover, .contact a:hover { border-bottom-color: var(--cyan); }
-    .contact ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
-    .contact li { font-size: 0.92rem; color: var(--muted); overflow-wrap: anywhere; }
-
-    /* ---- language selector ---- */
-    .lang-selector { position: relative; display: inline-flex; }
-    .lang-btn {
-      font-family: var(--mono); font-size: 0.8rem; padding: 0.44rem 0.72rem; border-radius: 999px;
-      background: rgba(125, 178, 255, 0.06); border: 1px solid var(--edge); color: var(--muted); cursor: pointer; transition: all .2s ease;
-    }
-    .lang-btn:hover { color: var(--ink); border-color: var(--edge-strong); background: rgba(34, 211, 238, 0.12); }
-    .lang-dropdown {
-      position: fixed; background: rgba(12, 19, 38, 0.96); border: 1px solid var(--edge-strong);
-      border-radius: 12px; box-shadow: 0 16px 40px rgba(2, 6, 18, 0.6); overflow: hidden; z-index: 100; min-width: 132px;
-      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    }
-    .lang-option {
-      display: block; width: 100%; padding: 0.56rem 0.95rem; border: 0; background: transparent;
-      color: var(--muted); font-size: 0.84rem; text-align: left; cursor: pointer; font-family: var(--sans); transition: background .15s ease, color .15s ease;
-    }
-    .lang-option:hover { background: rgba(34, 211, 238, 0.12); color: var(--ink); }
-    .lang-option.active { background: rgba(168, 85, 247, 0.18); color: var(--ink); font-weight: 600; }
-
-    footer { text-align: center; font-size: 0.8rem; color: var(--faint); font-family: var(--mono); margin-top: 0.4rem; padding-bottom: 0.5rem; }
-
-    :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
-
-    @media (max-width: 960px) {
-      .container { grid-template-columns: 1fr; grid-template-areas: "nav" "aside" "main"; }
-      .profile { position: static; }
-      .top-nav { top: 0.55rem; }
-    }
-    @media (max-width: 640px) {
-      .container { width: min(1200px, calc(100% - 1.1rem)); }
-      .top-nav { flex-wrap: wrap; gap: 0.5rem; }
-      .menu { flex-wrap: wrap; justify-content: flex-start; gap: 0.28rem; }
-      .section { padding: 1.1rem 1.1rem; }
-      #about { padding: 1.35rem 1.15rem; }
-      .menu a { font-size: 0.8rem; padding: 0.4rem 0.58rem; }
-      .stats { grid-template-columns: 1fr 1fr 1fr; gap: 0.45rem; }
-      .stat { padding: 0.65rem 0.6rem; }
-      .stat-num { font-size: 1.35rem; }
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes blink { 50% { opacity: 0; } }
-    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
-
-    /* ---- scroll progress bar ---- */
-    .scroll-progress {
-      position: fixed; top: 0; left: 0; height: 3px; width: 0;
-      z-index: 60; pointer-events: none; border-radius: 0 3px 3px 0;
-      background: linear-gradient(90deg, var(--cyan), var(--sky) 55%, var(--violet));
-      box-shadow: 0 0 16px rgba(34, 211, 238, 0.7);
-      transition: width .1s linear;
-    }
-
-    /* ---- drifting aurora blobs ---- */
-    .aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; filter: blur(70px); opacity: 0.55; }
-    .aurora span { position: absolute; display: block; border-radius: 50%; mix-blend-mode: screen; will-change: transform; }
-    .aurora .a1 { width: 48vw; height: 48vw; left: -8vw; top: -12vh; background: radial-gradient(circle, rgba(34,211,238,0.55), transparent 66%); animation: drift1 24s ease-in-out infinite; }
-    .aurora .a2 { width: 42vw; height: 42vw; right: -10vw; top: -6vh; background: radial-gradient(circle, rgba(168,85,247,0.5), transparent 66%); animation: drift2 29s ease-in-out infinite; }
-    .aurora .a3 { width: 40vw; height: 40vw; left: 32vw; top: 22vh; background: radial-gradient(circle, rgba(56,189,248,0.4), transparent 66%); animation: drift3 33s ease-in-out infinite; }
-    @keyframes drift1 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(9vw,7vh) scale(1.14); } }
-    @keyframes drift2 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(-8vw,9vh) scale(1.1); } }
-    @keyframes drift3 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(6vw,-7vh) scale(1.18); } }
-
-    /* ---- shimmering gradient title ---- */
-    h1 { background-size: 220% auto; animation: shimmer 9s ease-in-out infinite; }
-    @keyframes shimmer { 0%,100%{ background-position: 0% 50%; } 50%{ background-position: 100% 50%; } }
-
-    /* ---- card cursor sheen ---- */
-    .pub::after {
-      content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-      opacity: 0; transition: opacity .3s ease;
-      background: radial-gradient(300px circle at var(--cmx, 50%) var(--cmy, 0%), rgba(34, 211, 238, 0.28), transparent 62%);
-    }
-    .pub:hover::after { opacity: 1; }
-    .pub:hover { box-shadow: 0 18px 44px rgba(2, 6, 18, 0.5), 0 0 0 1px rgba(34, 211, 238, 0.12); }
-
-    /* ---- tag / chip micro-interactions ---- */
-    .tag { transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease; }
-    .tag:hover { transform: translateY(-2px); color: #eafdff; border-color: var(--edge-strong); background: rgba(34, 211, 238, 0.16); box-shadow: 0 6px 16px rgba(34, 211, 238, 0.18); }
-
-    /* ---- 3D tilt (driven by JS on fine pointers) ---- */
-    .profile { transition: transform .22s ease-out; }
-    .pub, .profile { transform-style: preserve-3d; }
-
-    /* ---- avatar aura ---- */
-    .avatar-wrap::before {
-      content: ""; position: absolute; inset: -8px; border-radius: 50%; z-index: -1;
-      background: conic-gradient(from 0deg, var(--cyan), var(--violet), var(--sky), var(--cyan));
-      filter: blur(16px); opacity: 0.55; animation: spin 14s linear infinite;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation: none !important; transition: none !important; }
-      .js .section { opacity: 1; transform: none; }
-      .caret { opacity: 1; }
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Research in distributed control, cooperative multi-robot source seeking and uncertainty-aware decisions, alongside embedded robotics, teaching and student support."><meta name="color-scheme" content="dark">
+<title>Donglin (Dennis) Li | Research · Engineering · Teaching</title>
+<link rel="icon" href="images/avatar.jpg">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="stylesheet" href="assets/liquid-glass-home.css">
 </head>
 <body>
-  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
-  <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-  <canvas id="agents" aria-hidden="true"></canvas>
-  <div class="grid" aria-hidden="true"></div>
-  <div class="vignette" aria-hidden="true"></div>
-  <div class="spotlight" id="spotlight" aria-hidden="true"></div>
-
-  <div class="container">
-    <nav class="top-nav glass" aria-label="Primary navigation">
-      <div class="brand">Donglin Li (Dennis)</div>
-      <div class="menu" id="menu">
-        <a href="#about">About</a>
-        <a href="#research">Research</a>
-        <a href="#publications">Publications</a>
-        <a href="#projects">Projects</a>
-        <a href="#experience">Experience</a>
-        <a href="#awards">Awards</a>
-        <a href="#contact">Contact</a>
-      </div>
-    </nav>
-
-    <aside>
-      <section class="profile glass section" style="--delay: 0.06s;">
-        <div class="avatar-wrap">
-          <img class="avatar" src="images/avatar.jpg" alt="Portrait of Donglin (Dennis) Li" />
-        </div>
-        <div class="center">
-          <h2>Donglin Li (Dennis)</h2>
-          <div class="small">PhD Candidate (2024-present)</div>
-          <div class="small">EEE PhD Student Rep (2024-present)</div>
-          <div class="small">EEE, The University of Manchester</div>
-        </div>
-
-        <div class="quick">
-          <a href="files/CV_public.html" target="_blank" rel="noopener">CV</a>
-          <a href="#contact">Email</a>
-          <a href="https://github.com/Daihaolin201" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://www.linkedin.com/in/donglin-li-55424326b" target="_blank" rel="noopener">LinkedIn</a>
-          <a href="#publications">Updates</a>
-        </div>
-      </section>
-    </aside>
-
-    <main>
-      <section class="section glass" id="about">
-        <div class="kicker">PhD · Control, Robotics &amp; AI · The University of Manchester</div>
-        <div class="hero-top">
-          <h1>Building robust multi-agent intelligence for real-world systems.<span class="caret">_</span></h1>
-          <span class="badge">Available for collaboration</span>
-        </div>
-        <p>
-          I am a PhD researcher in Electrical and Electronic Engineering (Control, Robotics and AI) at The University of Manchester (2024-present), where I also completed my BEng in Electrical and Electronics Engineering with First Class Honours (2021-2024).
-          My work focuses on distributed control, multi-robot coordination, and uncertainty-aware decision-making for autonomous systems.
-          I also support teaching in control and robotics related courses as a Graduate Teaching Assistant, and serve as the EEE PhD Student Representative (Department Leader, 2024-present).
-        </p>
-
-        <div class="stats">
-          <div class="stat"><span class="stat-num" data-count="2">02</span><span class="stat-label">First-author papers</span></div>
-          <div class="stat"><span class="stat-num" data-count="6">06</span><span class="stat-label">Awards</span></div>
-          <div class="stat"><span class="stat-num">1st</span><span class="stat-label">BEng First-Class</span></div>
-        </div>
-
-        <div class="tag-row">
-          <span class="tag">Distributed Control</span>
-          <span class="tag">Multi-Robot Systems</span>
-          <span class="tag">Consensus &amp; Formation</span>
-          <span class="tag">Active Source Seeking</span>
-          <span class="tag">Dual Control</span>
-        </div>
-
-        <div class="cta-row">
-          <a class="btn primary" href="#publications">View Updates</a>
-          <a class="btn ghost" href="files/CV_public.html" target="_blank" rel="noopener">Download CV</a>
-        </div>
-      </section>
-
-      <section class="section glass" id="research">
-        <div class="sec-head"><span class="eyebrow">01</span><h2>Research Interests</h2></div>
-        <ul>
-          <li>Dual control for exploration-exploitation in autonomous source seeking.</li>
-          <li>Distributed and robust consensus control for multi-agent systems.</li>
-          <li>Multi-robot cooperative search with perception-aware planning.</li>
-          <li>Control and robotics experimentation with embedded platforms (STM32/ESP32/PLC).</li>
-        </ul>
-      </section>
-
-      <section class="section glass" id="publications">
-        <div class="sec-head"><span class="eyebrow">02</span><h2>Publications</h2></div>
-        <div class="list">
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Dual Control for Multi-Robot Source Seeking with Consensus Mean Fusion and Safety Projection</div><span class="chip">Accepted</span></div>
-            <p>First author · 45th Chinese Control Conference (CCC 2026), Changsha</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Trace Weighted Event-Triggered Mean Fusion for Efficient Multi-Robot Source Seeking</div><span class="chip">Under review</span></div>
-            <p>First author · 8th Int. Conf. on Industrial AI (IAI 2026), Shenyang</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Multi-Objective Pipeline Scheduling for LLM Inference in Heterogeneous DePIN</div><span class="chip">Accepted</span></div>
-            <p>Co-author · IFAC World Congress 2026, Busan</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Load Balancing for LLM Inference Serving: A Control and Learning Oriented Survey</div><span class="chip">Under review</span></div>
-            <p>Co-author · Neurocomputing</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Design &amp; Control of Multi-Agent Robotic Systems for Extreme Environments</div><span class="chip">In prep.</span></div>
-            <p>Lead author · invited book chapter (in preparation)</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section glass" id="projects">
-        <div class="sec-head"><span class="eyebrow">03</span><h2>Projects</h2></div>
-
-        <div class="grid-cards">
-          <div class="pub">
-            <div class="pub-title">Dual Control for Exploration &amp; Exploitation (DCEE) in Autonomous Source Seeking (Sept 2024–present)</div>
-            <p>Investigated uncertainty-aware decision-making for autonomous source seeking using DCEE. Designed multi-robot cooperative search algorithms for efficient coordination and target localisation. Contributed to a research paper on cooperative DCEE strategies and presented findings at the EEE Postgraduate Research Conference, University of Manchester.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">Hack-a-Bot Robotics Challenge (Mar 2026)</div>
-            <p>Team captain at the UoM &amp; Sony hackathon. Built a dual-robot autonomous system for target localisation, path planning and cooperative object pushing — integrating ArUco localisation, A* planning, and Pure Pursuit + PID control with real-time trajectory correction and synchronised operation. Awarded Third Prize.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">OpenClaw × Imperial College London Hackathon (Mar 2026)</div>
-            <p>Team captain building a multi-agent AI system in which a coordinator agent delegates product, marketing, sales and operations tasks. Designed inter-agent tool-calling, role specialisation and a shared-state mechanism.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">Hack-a-Bot Robotics Challenge (Mar 2025)</div>
-            <p>UoM &amp; Sony joint hackathon. Built a full robotics platform in 24 hours: OpenCV vision pipeline (filtering, binarisation), A* path planning with dynamic re-routing, ArUco marker localisation, and PID trajectory tracking. Achieved a complete autonomous delivery cycle from any start point.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">Smart Traffic Cones Swarm Control (Sept 2023–May 2024)</div>
-            <p>Designed an ESP32-based robot control board with group robot control and Zigbee communication. Integrated ultrasonic sensors, motor drivers, and developed firmware for ESP32 and STM32.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">ESP Buggy — STM32 Autonomous Tracking Car (Sept 2022–May 2023)</div>
-            <p>Led design of an STM32-based automatic tracking car as team lead: circuit design, PCB layout, hardware integration, PID-based control, and dual feedback system. Managed project planning and task allocation.</p>
-          </div>
-
-          <div class="pub">
-            <div class="pub-title">UoM &amp; NVIDIA PuzzleThon — Computer Vision (Mar–Apr 2024)</div>
-            <p>Developed computer vision and deep learning functions for an autonomous line-tracking car using Python and ROS. Trained deep learning models to detect and respond to traffic signals from on-board cameras.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section glass" id="experience">
-        <div class="sec-head"><span class="eyebrow">04</span><h2>Experience</h2></div>
-        <div class="list">
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">PhD Researcher — Control, Robotics &amp; AI</div><span class="chip ghost">2024 – present</span></div>
-            <div class="org">The University of Manchester</div>
-            <p>Dual control (DCEE) for autonomous source seeking and multi-robot cooperative search.</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Graduate Teaching Assistant</div><span class="chip ghost">2024 – present</span></div>
-            <div class="org">The University of Manchester</div>
-            <p>Labs, tutorials and assessment across control, robotics and digital-electronics courses.</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Guest Lecturer &amp; Experiment Designer</div><span class="chip ghost">2025</span></div>
-            <div class="org">The University of Manchester</div>
-            <p>Built an MSc process-control experiment (PLC ↔ MATLAB/Simulink over OPC) and delivered guest lectures.</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">Academic Tutor</div><span class="chip ghost">2026 – present</span></div>
-            <div class="org">UK study-abroad education consultancy</div>
-            <p>Tutor mathematics, physics and academic English; mentor postgraduate research proposals and publication.</p>
-          </div>
-          <div class="pub">
-            <div class="pub-head"><div class="pub-title">PhD Tutor — The Brilliant Club</div><span class="chip ghost">2026 – present</span></div>
-            <div class="org">The Brilliant Club (widening-participation charity)</div>
-            <p>Deliver university-style tutorials to school pupils from under-represented backgrounds (Scholars Programme), supporting access to higher education.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section glass" id="education">
-        <div class="sec-head"><span class="eyebrow">05</span><h2>Education</h2></div>
-        <div class="list">
-          <div class="pub"><div class="pub-title">PhD — Electrical &amp; Electronic Engineering</div><p>Control, Robotics &amp; AI · The University of Manchester · 2024 – present</p></div>
-          <div class="pub"><div class="pub-title">BEng (Hons) — Electrical &amp; Electronic Engineering, First Class</div><p>The University of Manchester · 2021 – 2024</p></div>
-        </div>
-      </section>
-
-      <section class="section glass" id="skills">
-        <div class="sec-head"><span class="eyebrow">06</span><h2>Technical Skills</h2></div>
-        <div class="groups">
-          <div class="skill-row"><div class="skill-label">Control &amp; Robotics</div><div class="tags"><span class="tag">Dual Control (DCEE)</span><span class="tag">Consensus &amp; Formation</span><span class="tag">Source Seeking</span><span class="tag">Path Planning (A*)</span><span class="tag">Multi-Robot Coordination</span><span class="tag">ROS</span></div></div>
-          <div class="skill-row"><div class="skill-label">Programming</div><div class="tags"><span class="tag">Python</span><span class="tag">C/C++</span><span class="tag">MATLAB</span><span class="tag">R</span><span class="tag">VHDL</span></div></div>
-          <div class="skill-row"><div class="skill-label">Embedded &amp; Hardware</div><div class="tags"><span class="tag">STM32</span><span class="tag">ESP32</span><span class="tag">Arduino</span><span class="tag">FPGA</span><span class="tag">PCB Design</span><span class="tag">PLC</span></div></div>
-          <div class="skill-row"><div class="skill-label">Simulation &amp; Tools</div><div class="tags"><span class="tag">MATLAB/Simulink</span><span class="tag">LabVIEW</span><span class="tag">OpenCV</span><span class="tag">PLECS</span><span class="tag">Git</span><span class="tag">LaTeX</span></div></div>
-        </div>
-      </section>
-
-      <section class="section glass" id="awards">
-        <div class="sec-head"><span class="eyebrow">07</span><h2>Honours &amp; Awards</h2></div>
-        <div class="list">
-          <div class="pub"><div class="pub-title">🎓 2026 — Doctoral Training &amp; Development Support Fund (DTDSF)</div><p>The University of Manchester. 2026.</p></div>
-          <div class="pub"><div class="pub-title">🥉 2026 — Third Prize, Hack-a-Bot Robotics Challenge</div><p>UoM RoboSoc. March 2026.</p></div>
-          <div class="pub"><div class="pub-title">🥇 2025 — First Place Poster Prize, EEE Postgraduate Research Conference</div><p>Department of Electrical and Electronic Engineering, The University of Manchester. November 2025.</p></div>
-          <div class="pub"><div class="pub-title">🥇 2025 — First Prize, Hack-a-Bot Robotics Challenge</div><p>The University of Manchester &amp; Sony joint hackathon. March 2025.</p></div>
-          <div class="pub"><div class="pub-title">🥈 2024 — Second Prize, NVIDIA PuzzleThon</div><p>The University of Manchester &amp; NVIDIA. March 2024.</p></div>
-          <div class="pub"><div class="pub-title">🥉 2023 — Third Prize, ESP Buggy Development Competition</div><p>The University of Manchester. May 2023.</p></div>
-        </div>
-      </section>
-
-      <section class="section glass contact" id="contact">
-        <div class="sec-head"><span class="eyebrow">08</span><h2>Contact</h2></div>
-        <ul>
-          <li>University Email: <a href="mailto:Donglin.Li@Manchester.ac.uk">Donglin.Li@Manchester.ac.uk</a></li>
-          <li>Personal Email: <a href="mailto:Dennis.Li201@outlook.com">Dennis.Li201@outlook.com</a></li>
-          <li>Affiliation: Department of Electrical and Electronic Engineering, The University of Manchester</li>
-          <li>Website: <a href="https://Daihaolin201.github.io" target="_blank" rel="noopener">Daihaolin201.github.io</a></li>
-          <li>GitHub: <a href="https://github.com/Daihaolin201" target="_blank" rel="noopener">github.com/Daihaolin201</a></li>
-          <li>LinkedIn: <a href="https://www.linkedin.com/in/donglin-li-55424326b" target="_blank" rel="noopener">linkedin.com/in/donglin-li-55424326b</a></li>
-        </ul>
-      </section>
-
-      <footer>
-        <span id="footer-text">2026 Donglin Li (Dennis) · Crafted with a liquid-glass inspired interface.</span>
-      </footer>
-    </main>
-  </div>
-
-  <script src="js/i18n.js?v=20260611"></script>
-  <script>
-    i18n.init();
-    i18n.createSelector();
-
-    /* ---- active-section nav highlight ---- */
-    const sections = ["about", "research", "publications", "projects", "experience", "awards", "contact"];
-    const menuMap = new Map(sections.map((id) => [id, document.querySelector(`.menu a[href="#${id}"]`)]));
-    const navObserver = new IntersectionObserver((entries) => {
-      let current = null, maxRatio = 0;
-      for (const entry of entries) {
-        if (entry.isIntersecting && entry.intersectionRatio > maxRatio) { maxRatio = entry.intersectionRatio; current = entry.target.id; }
-      }
-      if (!current) return;
-      for (const [id, link] of menuMap.entries()) { if (link) link.setAttribute("aria-current", id === current ? "true" : "false"); }
-    }, { rootMargin: "-20% 0px -55% 0px", threshold: [0.2, 0.45, 0.7] });
-    sections.forEach((id) => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
-
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    /* ---- boot sequence: one-shot mission-control intro (skippable, once per session) ---- */
-    (function () {
-      let seen = null;
-      try { seen = sessionStorage.getItem("boot-seen"); } catch (e) {}
-      if (reduceMotion || seen) return;
-      try { sessionStorage.setItem("boot-seen", "1"); } catch (e) {}
-      const o = document.createElement("div");
-      o.id = "boot"; o.setAttribute("aria-hidden", "true");
-      o.style.cssText = "position:fixed;inset:0;z-index:80;background:#04070f;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;cursor:pointer;";
-      o.innerHTML = '<pre style="font-family:var(--mono);font-size:12px;line-height:1.8;color:#7dd3fc;margin:0;text-shadow:0 0 14px rgba(34,211,238,.45)"></pre>';
-      document.body.appendChild(o);
-      const pre = o.querySelector("pre");
-      const lines = [
-        "◤ DENNIS.LI — SWARM CONSOLE v2",
-        "> spawning agents ............ OK",
-        "> mesh link / consensus ...... OK",
-        "> bayesian belief filter ..... OK",
-        "> source-seeking online — welcome."
-      ];
-      let li = 0;
-      (function next() {
-        if (!o.isConnected) return;
-        if (li < lines.length) { pre.textContent += (li ? "\n" : "") + lines[li++]; setTimeout(next, 130); }
-        else setTimeout(() => { o.style.opacity = "0"; setTimeout(() => o.remove(), 500); }, 380);
-      })();
-      o.addEventListener("pointerdown", () => o.remove());
-    })();
-
-    /* ---- scroll reveal + stat count-up ---- */
-    const reveal = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        e.target.classList.add("in");
-        e.target.querySelectorAll(".stat-num[data-count]").forEach(countUp);
-        reveal.unobserve(e.target);
-      });
-    }, { threshold: 0.12 });
-    document.querySelectorAll(".section").forEach((s) => reveal.observe(s));
-
-    function countUp(el) {
-      if (el.dataset.done) return; el.dataset.done = "1";
-      const target = parseInt(el.dataset.count, 10);
-      if (isNaN(target)) return;
-      const final = String(target).padStart(2, "0");
-      if (reduceMotion) { el.textContent = final; return; }
-      const dur = 900, start = performance.now();
-      function frame(t) {
-        const p = Math.min((t - start) / dur, 1);
-        el.textContent = String(Math.round(p * target)).padStart(2, "0");
-        if (p < 1) requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-      setTimeout(() => { el.textContent = final; }, dur + 400);  // guarantee final value even if rAF is throttled (background tab)
-    }
-
-    /* ---- cursor spotlight + card sheen + shared pointer ---- */
-    const root = document.documentElement;
-    const pointer = { x: -999, y: -999, active: false };
-    window.__pointer = pointer;
-    window.addEventListener("pointermove", (event) => {
-      root.style.setProperty("--mx", `${(event.clientX / window.innerWidth) * 100}%`);
-      root.style.setProperty("--my", `${(event.clientY / window.innerHeight) * 100}%`);
-      pointer.x = event.clientX; pointer.y = event.clientY; pointer.active = true;
-      const card = event.target.closest && event.target.closest(".pub");
-      if (card) {
-        const r = card.getBoundingClientRect();
-        card.style.setProperty("--cmx", `${event.clientX - r.left}px`);
-        card.style.setProperty("--cmy", `${event.clientY - r.top}px`);
-      }
-    });
-    window.addEventListener("pointerleave", () => { pointer.active = false; });
-
-    /* ---- scroll progress bar ---- */
-    const progress = document.getElementById("scroll-progress");
-    function updateProgress() {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      const p = max > 0 ? (h.scrollTop || document.body.scrollTop) / max : 0;
-      if (progress) progress.style.width = `${Math.min(p, 1) * 100}%`;
-    }
-    window.addEventListener("scroll", updateProgress, { passive: true });
-    updateProgress();
-
-    /* ---- keep content clear of the fixed nav (height varies with wrap / language) ---- */
-    const fixedNav = document.querySelector(".top-nav");
-    const containerEl = document.querySelector(".container");
-    function padForNav() {
-      if (fixedNav && containerEl) containerEl.style.paddingTop = (fixedNav.offsetHeight + 22) + "px";
-    }
-    padForNav();
-    window.addEventListener("load", padForNav);
-    if (window.ResizeObserver && fixedNav) new ResizeObserver(padForNav).observe(fixedNav);
-
-    /* ---- cinematic layer: text decode, 3D tilt, magnetic CTAs, grid parallax ---- */
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-    const SCRAMBLE = "!<>-_/[]{}=+*^?#$%&";
-    function decodeText(el, dur = 950) {
-      if (reduceMotion || !el) return;
-      const node = el.childNodes[0];
-      if (!node || node.nodeType !== 3) return;   // only scramble the text node; keep the caret span intact
-      const final = node.textContent;
-      const start = performance.now();
-      (function tick(now) {
-        const p = Math.min((now - start) / dur, 1);
-        const reveal = Math.floor(p * final.length);
-        let out = final.slice(0, reveal);
-        for (let i = reveal; i < final.length; i++) out += final[i] === " " ? " " : SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0];
-        node.textContent = out;
-        if (p < 1) requestAnimationFrame(tick); else node.textContent = final;
-      })(start);
-      setTimeout(() => { node.textContent = final; }, dur + 250);  // rAF is paused in background tabs — guarantee the final text
-    }
-    const heroH1 = document.querySelector("#about h1");
-    decodeText(heroH1);
-    const _setLanguage = i18n.setLanguage.bind(i18n);
-    i18n.setLanguage = (lang) => { _setLanguage(lang); decodeText(heroH1); };
-
-    if (finePointer && !reduceMotion) {
-      document.querySelectorAll(".pub, .profile").forEach((el) => {
-        el.addEventListener("pointermove", (e) => {
-          const r = el.getBoundingClientRect();
-          const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
-          el.style.transform = `perspective(760px) rotateX(${(-py * 3.4).toFixed(2)}deg) rotateY(${(px * 4.6).toFixed(2)}deg)`;
-        });
-        el.addEventListener("pointerleave", () => { el.style.transform = ""; });
-      });
-      document.querySelectorAll(".btn").forEach((btn) => {
-        btn.addEventListener("pointermove", (e) => {
-          const r = btn.getBoundingClientRect();
-          btn.style.transform = `translate(${((e.clientX - r.left - r.width / 2) * 0.16).toFixed(1)}px, ${((e.clientY - r.top - r.height / 2) * 0.3).toFixed(1)}px)`;
-        });
-        btn.addEventListener("pointerleave", () => { btn.style.transform = ""; });
-      });
-    }
-
-    const gridLayer = document.querySelector(".grid");
-    window.addEventListener("scroll", () => {
-      if (gridLayer && !reduceMotion) gridLayer.style.backgroundPosition = `0 ${(-(window.scrollY * 0.12)).toFixed(1)}px`;
-    }, { passive: true });
-
-    /* ---- multi-agent consensus / source-seeking canvas ---- */
-    (function () {
-      const canvas = document.getElementById("agents");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      let W = 0, H = 0, dpr = 1, agents = [], source = null, raf = null, frame = 0, packets = [], pulses = [], fps = 60, lastT = 0;
-      const N = Math.max(12, Math.min(22, Math.round(window.innerWidth / 80)));
-      const LINK = 150, SRC_LINK = 270, SEP = 38;
-      const SPIN = Math.random() < 0.5 ? -1 : 1;   // whole-swarm vortex direction, random per visit
-      const rand = (a, b) => a + Math.random() * (b - a);
-
-      function resize() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        W = window.innerWidth; H = window.innerHeight;
-        canvas.width = W * dpr; canvas.height = H * dpr;
-        canvas.style.width = W + "px"; canvas.style.height = H + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-      function init() {
-        agents = Array.from({ length: N }, (_, i) => ({
-          x: rand(0, W), y: rand(0, H), vx: rand(-0.3, 0.3), vy: rand(-0.3, 0.3), trail: [],
-          ring: 46 + (i % 3) * 26 + rand(-6, 6),   // preferred standoff radius: three nested escort rings
-          dir: SPIN                                 // coherent vortex (same direction avoids head-on passes)
-        }));
-        source = { x: W * 0.55, y: H * 0.4, tx: W * 0.55, ty: H * 0.4, t: 0, boost: 0 };
-      }
-      // click-to-deploy: the fx layer calls this to drop the signal source at a point
-      window.__deployBeacon = (x, y) => { if (!source) return; source.tx = x; source.ty = y; source.t = 300; source.boost = 140; };
-      // double-click scatter: impulse away from the point, brief speed-cap lift, then the rings regroup
-      window.__scatter = (x, y) => {
-        for (const a of agents) {
-          const dx = a.x - x, dy = a.y - y, d = Math.hypot(dx, dy) || 1;
-          const k = Math.max(0.25, 1 - d / 460) * 7;
-          a.vx += (dx / d) * k; a.vy += (dy / d) * k;
-          a.burst = 36;
-        }
-      };
-      window.__swarm = () => ({ agents, source, pulses });   // debug/verification hook
-      function step() {
-        const ptr = window.__pointer;
-        const tracking = ptr && ptr.active && ptr.y < H;   // swarm follows the cursor (source-seeking)
-        if (tracking) {
-          source.tx = ptr.x; source.ty = ptr.y; source.t = 90;
-        } else if (--source.t <= 0) {
-          source.tx = rand(W * 0.25, W * 0.82); source.ty = rand(H * 0.18, H * 0.62); source.t = rand(220, 440);
-        }
-        const ease = tracking ? 0.05 : (source.boost > 0 ? (source.boost--, 0.045) : 0.01);
-        source.x += (source.tx - source.x) * ease; source.y += (source.ty - source.y) * ease;
-        for (const a of agents) {
-          const dx = source.x - a.x, dy = source.y - a.y, d = Math.hypot(dx, dy) || 1;
-          const ux = dx / d, uy = dy / d;
-          // standoff-ring seek: spring toward this agent's escort radius, not the centre
-          const radial = Math.max(-0.06, Math.min(0.055, (d - a.ring) * 0.0018));
-          a.vx += ux * radial; a.vy += uy * radial;
-          // tangential circulation: orbit the source once nearby (rings counter-rotate)
-          const zone = a.ring * 2.4;
-          if (d < zone) {
-            const tng = 0.022 + 0.05 * (1 - d / zone);
-            a.vx += -uy * a.dir * tng; a.vy += ux * a.dir * tng;
-          }
-          let cx = 0, cy = 0, n = 0;
-          for (const b of agents) {
-            if (b === a) continue;
-            const ex = b.x - a.x, ey = b.y - a.y, dd = ex * ex + ey * ey;
-            if (dd < LINK * LINK) { cx += b.vx; cy += b.vy; n++; }
-            if (dd < SEP * SEP && dd > 0.01) {           // separation: keep safe spacing, no clumping
-              const dl = Math.sqrt(dd), f = (1 - dl / SEP) * 0.16;
-              a.vx -= (ex / dl) * f; a.vy -= (ey / dl) * f;
-            }
-          }
-          if (n) { a.vx += (cx / n) * 0.03; a.vy += (cy / n) * 0.03; } // consensus / alignment
-          a.vx = a.vx * 0.965 + rand(-0.02, 0.02); a.vy = a.vy * 0.965 + rand(-0.02, 0.02);
-          const sp = Math.hypot(a.vx, a.vy), max = a.burst > 0 ? (a.burst--, 4) : 1.6; if (sp > max) { a.vx = a.vx / sp * max; a.vy = a.vy / sp * max; }
-          a.x += a.vx; a.y += a.vy;
-          let wrapped = false;
-          if (a.x < -20) { a.x = W + 20; wrapped = true; } if (a.x > W + 20) { a.x = -20; wrapped = true; }
-          if (a.y < -20) { a.y = H + 20; wrapped = true; } if (a.y > H + 20) { a.y = -20; wrapped = true; }
-          if (wrapped) { a.trail.length = 0; }
-          else { a.trail.push(a.x, a.y); if (a.trail.length > 24) a.trail.splice(0, 2); }
-        }
-        // communication packets travelling along active links
-        if (packets.length < 24 && Math.random() < 0.3) {
-          const a = agents[(Math.random() * agents.length) | 0];
-          if (Math.hypot(a.x - source.x, a.y - source.y) < SRC_LINK) {
-            packets.push({ fa: a, fb: source, t: 0, sp: rand(0.015, 0.03), c: "#c084fc", max: SRC_LINK });
-          } else {
-            const b = agents[(Math.random() * agents.length) | 0];
-            if (b !== a && Math.hypot(a.x - b.x, a.y - b.y) < LINK) packets.push({ fa: a, fb: b, t: 0, sp: rand(0.02, 0.045), c: "#22d3ee", max: LINK });
-          }
-        }
-        for (let i = packets.length - 1; i >= 0; i--) {
-          const p = packets[i]; p.t += p.sp;
-          if (p.t >= 1 || Math.hypot(p.fa.x - p.fb.x, p.fa.y - p.fb.y) > p.max * 1.25) packets.splice(i, 1); // done or link broken/wrapped
-        }
-        // sonar sensing pulses: a random agent occasionally pings its surroundings
-        if (pulses.length < 5 && Math.random() < 0.014) {
-          const a = agents[(Math.random() * agents.length) | 0];
-          pulses.push({ x: a.x, y: a.y, r: 4, life: 1 });
-        }
-        for (let i = pulses.length - 1; i >= 0; i--) {
-          const g = pulses[i]; g.r += 1.7; g.life -= 0.016;
-          if (g.life <= 0) pulses.splice(i, 1);
-        }
-      }
-      function draw() {
-        ctx.clearRect(0, 0, W, H);
-        let linkCount = 0;
-        for (let i = 0; i < agents.length; i++) {
-          for (let j = i + 1; j < agents.length; j++) {
-            const a = agents[i], b = agents[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-            if (d < LINK) { linkCount++; ctx.globalAlpha = (1 - d / LINK) * 0.3; ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
-          }
-        }
-        for (const a of agents) { const d = Math.hypot(a.x - source.x, a.y - source.y); if (d < SRC_LINK) { ctx.globalAlpha = (1 - d / SRC_LINK) * 0.16; ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(source.x, source.y); ctx.stroke(); } }
-        ctx.globalAlpha = 1;
-        // comet trails
-        for (const a of agents) {
-          const pts = a.trail.length / 2;
-          for (let k = 0; k < a.trail.length; k += 2) {
-            const f = (k / 2) / Math.max(pts - 1, 1);
-            ctx.globalAlpha = f * 0.3;
-            ctx.fillStyle = "#38bdf8";
-            ctx.beginPath(); ctx.arc(a.trail[k], a.trail[k + 1], 1.5 * f + 0.2, 0, 6.2832); ctx.fill();
-          }
-        }
-        ctx.globalAlpha = 1;
-        for (const a of agents) { ctx.beginPath(); ctx.fillStyle = "#7dd3fc"; ctx.shadowColor = "#22d3ee"; ctx.shadowBlur = 10; ctx.arc(a.x, a.y, 2.7, 0, 6.2832); ctx.fill(); }
-        const pulse = 1 + Math.sin(frame * 0.06) * 0.28;
-        ctx.beginPath(); ctx.fillStyle = "#c084fc"; ctx.shadowColor = "#a855f7"; ctx.shadowBlur = 26 * pulse; ctx.arc(source.x, source.y, 4.6 * pulse, 0, 6.2832); ctx.fill();
-        ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1; ctx.arc(source.x, source.y, 10 * pulse + 4, 0, 6.2832); ctx.stroke();
-        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-        // communication packets
-        for (const p of packets) {
-          const x = p.fa.x + (p.fb.x - p.fa.x) * p.t, y = p.fa.y + (p.fb.y - p.fa.y) * p.t;
-          ctx.globalAlpha = 0.85 * (1 - Math.abs(p.t - 0.5) * 0.7);
-          ctx.fillStyle = p.c; ctx.shadowColor = p.c; ctx.shadowBlur = 7;
-          ctx.beginPath(); ctx.arc(x, y, 1.7, 0, 6.2832); ctx.fill();
-        }
-        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-        // sonar pulses
-        for (const g of pulses) {
-          ctx.globalAlpha = g.life * 0.32; ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, 6.2832); ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-        drawBelief();
-        // shared lock metric: how converged the swarm is on the source
-        let md = 0;
-        for (const a of agents) md += Math.hypot(a.x - source.x, a.y - source.y);
-        md /= agents.length;
-        const lock = Math.max(0, Math.min(99, Math.round((1 - md / (SRC_LINK * 1.4)) * 100)));
-        if (lock >= 70) drawReticle();
-        drawHUD(linkCount, lock);
-      }
-      // rotating target-lock reticle around the source once the swarm converges
-      function drawReticle() {
-        const rr = 24 + 5 * Math.sin(frame * 0.08);
-        ctx.save();
-        ctx.translate(source.x, source.y); ctx.rotate(frame * 0.02);
-        ctx.strokeStyle = "#34d399"; ctx.globalAlpha = 0.8; ctx.lineWidth = 1.2;
-        for (let k = 0; k < 4; k++) {
-          ctx.beginPath(); ctx.arc(0, 0, rr, k * 1.5708 + 0.2, k * 1.5708 + 1.37); ctx.stroke();
-        }
-        for (let k = 0; k < 4; k++) {
-          const ang = k * 1.5708;
-          ctx.beginPath(); ctx.moveTo(Math.cos(ang) * (rr - 5), Math.sin(ang) * (rr - 5)); ctx.lineTo(Math.cos(ang) * (rr + 5), Math.sin(ang) * (rr + 5)); ctx.stroke();
-        }
-        ctx.restore();
-        ctx.fillStyle = "#34d399"; ctx.globalAlpha = 0.85; ctx.font = '9px ui-monospace, "SF Mono", Menlo, monospace';
-        ctx.fillText("LOCK", source.x + rr + 9, source.y + 3);
-        ctx.globalAlpha = 1;
-      }
-      // swarm belief: 1-sigma covariance ellipse of agent positions (marching-ants) + centroid crosshair
-      function drawBelief() {
-        const n = agents.length; if (n < 3) return;
-        let mx = 0, my = 0;
-        for (const a of agents) { mx += a.x; my += a.y; } mx /= n; my /= n;
-        let sxx = 0, syy = 0, sxy = 0;
-        for (const a of agents) { const dx = a.x - mx, dy = a.y - my; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; }
-        sxx /= n; syy /= n; sxy /= n;
-        const tr = sxx + syy, det = sxx * syy - sxy * sxy;
-        const disc = Math.sqrt(Math.max(tr * tr / 4 - det, 0));
-        const l1 = Math.max(tr / 2 + disc, 1), l2 = Math.max(tr / 2 - disc, 1);
-        const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy);
-        ctx.save();
-        ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 1;
-        ctx.setLineDash([5, 7]); ctx.lineDashOffset = -frame * 0.35; ctx.globalAlpha = 0.3;
-        ctx.beginPath(); ctx.ellipse(mx, my, Math.sqrt(l1) * 1.3, Math.sqrt(l2) * 1.3, ang, 0, 6.2832); ctx.stroke();
-        ctx.setLineDash([]); ctx.globalAlpha = 0.42;
-        ctx.beginPath(); ctx.moveTo(mx - 7, my); ctx.lineTo(mx + 7, my); ctx.moveTo(mx, my - 7); ctx.lineTo(mx, my + 7); ctx.stroke();
-        ctx.restore();
-      }
-      // live telemetry readout (desktop only)
-      function drawHUD(linkCount, lock) {
-        if (W < 700) return;
-        ctx.font = '10px ui-monospace, "SF Mono", Menlo, monospace';
-        ctx.fillStyle = "rgba(125, 178, 255, 0.5)";
-        ctx.fillText("◤ SWARM TELEMETRY — DCEE SIM · CLICK: DEPLOY SOURCE · 2×CLICK: SCATTER", 18, H - 44);
-        const clock = new Date().toISOString().substr(11, 8);
-        ctx.fillStyle = "rgba(125, 178, 255, 0.36)";
-        ctx.fillText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   UTC ${clock}   FPS ${Math.round(fps)}   SRC-LOCK `, 18, H - 30);
-        const w = ctx.measureText(`AGENTS ${agents.length}   LINKS ${linkCount}   PKTS ${packets.length}   UTC ${clock}   FPS ${Math.round(fps)}   SRC-LOCK `).width;
-        ctx.fillStyle = lock >= 70 ? "rgba(52, 211, 153, 0.85)" : "rgba(125, 178, 255, 0.36)";
-        ctx.fillText(`${String(lock).padStart(2, "0")}%${lock >= 70 ? " ◉ LOCKED" : ""}`, 18 + w, H - 30);
-      }
-      function loop(t) {
-        if (lastT && t) fps = fps * 0.95 + Math.min(1000 / (t - lastT), 120) * 0.05;
-        if (t) lastT = t;
-        frame++; step(); draw(); raf = requestAnimationFrame(loop);
-      }
-      function start() { if (!raf && !reduceMotion) loop(); }
-      function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
-
-      resize(); init();
-      if (reduceMotion) { draw(); } else { start(); }
-      let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { resize(); init(); if (reduceMotion) draw(); }, 180); });
-      document.addEventListener("visibilitychange", () => { document.hidden ? stop() : start(); });
-    })();
-
-    /* ---- foreground FX layer: cursor particle trail + click burst (renders ABOVE content) ---- */
-    (function () {
-      if (reduceMotion) return;
-      const c = document.createElement("canvas");
-      c.id = "fx"; c.setAttribute("aria-hidden", "true");
-      c.style.cssText = "position:fixed;inset:0;z-index:10;pointer-events:none;";
-      document.body.appendChild(c);
-      const fctx = c.getContext("2d");
-      let W = 0, H = 0, dpr = 1;
-      function rs() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        W = window.innerWidth; H = window.innerHeight;
-        c.width = W * dpr; c.height = H * dpr;
-        c.style.width = W + "px"; c.style.height = H + "px";
-        fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-      rs(); window.addEventListener("resize", rs);
-      const parts = [], rings = [];
-      window.__fx = { parts, rings };
-      let lx = -1, ly = -1;
-      if (finePointer) {
-        window.addEventListener("pointermove", (e) => {
-          if (lx >= 0) {
-            const dx = e.clientX - lx, dy = e.clientY - ly, d = Math.hypot(dx, dy);
-            const n = Math.min(3, Math.ceil(d / 12));
-            for (let i = 0; i < n; i++) {
-              const t = (i + 1) / n;
-              parts.push({ x: lx + dx * t + (Math.random() - 0.5) * 4, y: ly + dy * t + (Math.random() - 0.5) * 4,
-                vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6 - 0.25,
-                life: 1, r: 1 + Math.random() * 1.8, c: Math.random() < 0.7 ? "#22d3ee" : "#a855f7" });
-            }
-          }
-          lx = e.clientX; ly = e.clientY;
-          if (parts.length > 140) parts.splice(0, parts.length - 140);
-        }, { passive: true });
-      }
-      let lastDown = 0;
-      document.addEventListener("pointerdown", (e) => {
-        if (e.target.closest("a, button, input, select, textarea")) return;
-        const now = performance.now(), dbl = now - lastDown < 350;
-        lastDown = now;
-        if (dbl) {
-          // double-click: shockwave + scatter the swarm
-          rings.push({ x: e.clientX, y: e.clientY, r: 6, life: 1, sp: 8 });
-          for (let i = 0; i < 22; i++) {
-            const a = Math.PI * 2 * i / 22, s = 3 + Math.random() * 3.5;
-            parts.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-              life: 1, r: 1.6 + Math.random() * 1.8, c: i % 2 ? "#c084fc" : "#22d3ee" });
-          }
-          if (window.__scatter) window.__scatter(e.clientX, e.clientY);
-          return;
-        }
-        rings.push({ x: e.clientX, y: e.clientY, r: 4, life: 1 });
-        for (let i = 0; i < 14; i++) {
-          const a = Math.PI * 2 * i / 14, s = 1.5 + Math.random() * 2.2;
-          parts.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-            life: 1, r: 1.4 + Math.random() * 1.6, c: i % 3 ? "#22d3ee" : "#c084fc" });
-        }
-        if (window.__deployBeacon) window.__deployBeacon(e.clientX, e.clientY);
-      });
-      (function loop() {
-        fctx.clearRect(0, 0, W, H);
-        for (let i = parts.length - 1; i >= 0; i--) {
-          const p = parts[i];
-          p.x += p.vx; p.y += p.vy; p.vx *= 0.96; p.vy *= 0.96; p.life -= 0.026;
-          if (p.life <= 0) { parts.splice(i, 1); continue; }
-          fctx.globalAlpha = p.life * 0.85; fctx.fillStyle = p.c; fctx.shadowColor = p.c; fctx.shadowBlur = 8;
-          fctx.beginPath(); fctx.arc(p.x, p.y, p.r * p.life, 0, 6.2832); fctx.fill();
-        }
-        fctx.shadowBlur = 0;
-        for (let i = rings.length - 1; i >= 0; i--) {
-          const g = rings[i];
-          g.r += g.sp || 3.2; g.life -= 0.03;
-          if (g.life <= 0) { rings.splice(i, 1); continue; }
-          fctx.globalAlpha = g.life * 0.6; fctx.strokeStyle = "#7dd3fc"; fctx.lineWidth = 1.5;
-          fctx.beginPath(); fctx.arc(g.x, g.y, g.r, 0, 6.2832); fctx.stroke();
-        }
-        fctx.globalAlpha = 1;
-        requestAnimationFrame(loop);
-      })();
-    })();
-  </script>
-</body>
-</html>
+<a class="skip-link" href="#about">Skip to content</a>
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+<canvas id="agents" aria-hidden="true"></canvas><div class="grid" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div><div class="spotlight" id="spotlight" aria-hidden="true"></div>
+<div class="container">
+<nav class="top-nav glass" aria-label="Primary navigation"><div class="brand">Donglin (Dennis) Li</div><div class="menu" id="menu"><a href="#about">About</a><a href="#research">Research</a><a href="#publications">Publications</a><a href="#projects">Projects</a><a href="#employment">Experience</a><a href="#awards">Awards</a><a href="#service">Service</a><a href="#contact">Contact</a><a class="lang-btn" href="index-zh.htm" lang="zh-CN">中文</a></div></nav>
+<aside><section class="profile glass section"><div class="avatar-wrap"><img class="avatar" src="images/avatar.jpg" alt="Donglin (Dennis) Li" width="128" height="128"></div>
+<div class="center"><h2>Donglin (Dennis) Li</h2><div class="small">PhD · Control, Robotics &amp; AI · The University of Manchester</div><div class="small">Updated 6 October 2026</div></div>
+<div class="quick"><a href="cv/20261006_Donglin_CV_综合方向_英文_网页版.html">Full CV</a><a href="mailto:Donglin.Li@Manchester.ac.uk">Email</a><a href="https://github.com/Daihaolin201">GitHub</a><a href="https://www.linkedin.com/in/donglin-li-55424326b">LinkedIn</a><a href="#publications">Latest work</a></div></section></aside>
+<main>
+<section class="section glass" id="about"><div class="kicker">PhD · Control, Robotics &amp; AI · The University of Manchester</div><div class="hero-top"><h1>Bayesian control for cooperative robots.<span class="caret">_</span></h1></div>
+<p>Research in distributed control, cooperative multi-robot source seeking and uncertainty-aware decisions, alongside embedded robotics, teaching and student support.</p>
+<div class="stats"><div class="stat"><span class="stat-num" data-count="2">02</span><span class="stat-label">First-author accepted papers</span></div><div class="stat"><span class="stat-num" data-count="1">01</span><span class="stat-label">Journal paper online</span></div><div class="stat"><span class="stat-num" data-count="5">05</span><span class="stat-label">Manuscripts reviewed</span></div></div>
+<div class="cta-row"><a class="btn primary" href="#publications">Latest work</a><a class="btn ghost" href="cv/20261006_Donglin_CV_综合方向_英文_网页版.html">Full CV</a></div></section>
+<section class="section glass" id="research"><div class="sec-head"><span class="eyebrow">01</span><h2>Research Experience</h2></div><div class="list"><article class="pub" id="phd-dcee"><div class="pub-head"><div class="pub-title">Bayesian Dual Control for Cooperative Multi-Robot Source Seeking</div><span class="chip ghost">Sept. 2024 – Present</span></div>
+<div class="org">The University of Manchester · PhD Researcher</div>
+<ul><li>Built MATLAB simulations of Bayesian dual control for cooperative multi-robot source seeking, with posterior-mean consensus fusion and safety-constrained action projection.</li><li>Across 30 random seeds and ablation tests, compared packet counts and RMSE for trace-normalised event-triggered communication and inverse-trace fusion under heterogeneous sensing and communication stress.</li><li>Presented algorithm design and simulation results at the EEE Postgraduate Research Conference poster session.</li><li>First-authored papers accepted at CCC 2026 and IAI 2026; final manuscripts submitted. The IAI paper was named a Best Paper Award Finalist.</li></ul>
+</article>
+<article class="pub" id="llm-planner-offline"><div class="pub-head"><div class="pub-title">Language-Grounded Multi-Robot Planning</div><span class="chip ghost">2026 – Present</span></div>
+<div class="org">The University of Manchester — Collaborative PhD Research</div>
+<p class="status">Ongoing internal research; offline prototype and simulation evaluation.</p>
+<ul><li>Worked on an offline prototype that parsed JSON language directives, checked constraints and could fall back to a numerical multi-robot dual controller.</li><li>Tested malformed directives, failed commands and cache behaviour with local MATLAB/Python fixtures and simulations.</li></ul>
+</article>
+<article class="pub" id="world-model-reliability"><div class="pub-head"><div class="pub-title">World-Model Reliability for Closed-Loop Decision Making</div><span class="chip ghost">2026 – Present</span></div>
+<div class="org">Collaborative Survey Research</div>
+<p class="status">Internal survey draft in progress.</p>
+<ul><li>Grouped robotics and autonomous-driving studies for a survey by physical grounding, causal consistency, uncertainty and decision alignment.</li><li>Compiled benchmark comparisons and reference-linked evidence tables; checked manuscript figures and their source assets.</li></ul>
+</article>
+<article class="pub" id="prehardware-source-seeking"><div class="pub-head"><div class="pub-title">Source-Seeking Constraints and Hardware-Test Preparation</div><span class="chip ghost">2026 – Present</span></div>
+<div class="org">The University of Manchester — Collaborative PhD Research</div>
+<p class="status">Ongoing research; pre-hardware simulation stage.</p>
+<ul><li>Helped test compute limits, stale or lost messages, sensor bias and actuation lag in simulations; drafted criteria for later ROS 2 validation.</li></ul>
+</article></div></section><section class="section glass" id="publications"><div class="sec-head"><span class="eyebrow">02</span><h2>Publications &amp; Invited Chapter</h2></div><div class="list"><article class="pub" id="ccc-2026"><div class="pub-head"><div class="pub-title">Dual Control for Multi-Robot Source Seeking with Consensus Mean Fusion and Safety Projection</div></div>
+<div class="org">First author</div>
+<p class="authors">D. Li, Z. Li, H. Ma, C. Cao, Z. Ding</p>
+<p class="citation">45th Chinese Control Conference (CCC 2026), Changsha, China.</p>
+<p class="status">Accepted; final manuscript submitted.</p>
+</article>
+<article class="pub" id="iai-2026"><div class="pub-head"><div class="pub-title">Trace-Weighted Event-Triggered Mean Fusion for Efficient Multi-Robot Source Seeking</div></div>
+<div class="org">First author</div>
+<p class="authors">D. Li, Z. Li, J. Wang, H. Ma, Z. Ding</p>
+<p class="citation">8th International Conference on Industrial Artificial Intelligence (IAI 2026), Shenyang, China.</p>
+<p class="status">Accepted; final manuscript submitted. Best Paper Award Finalist.</p>
+</article>
+<article class="pub" id="neurocomputing-2026"><div class="pub-head"><div class="pub-title"><a href="https://doi.org/10.1016/j.neucom.2026.134973">Load Balancing for Large Language Model Inference Serving: A Control and Learning Oriented Survey</a></div></div>
+<div class="org">Co-author</div>
+<p class="authors">H. Ma, Z. Li, J. Wang, C. Cao, D. Li, J. Yang, Z. Ding</p>
+<p class="citation">Neurocomputing, vol. 706, art. 134973, 2026.</p>
+<p class="status">Published online 3 Sept. 2026.</p>
+<p><a href="https://doi.org/10.1016/j.neucom.2026.134973">doi:10.1016/j.neucom.2026.134973</a></p>
+</article>
+<article class="pub" id="ifac-2026"><div class="pub-head"><div class="pub-title">Multi-Objective Pipeline Scheduling for LLM Inference in Heterogeneous DePIN</div></div>
+<div class="org">Co-author</div>
+<p class="authors">H. Ma, Z. Li, C. Cao, D. Li, Z. Ding</p>
+<p class="citation">23rd IFAC World Congress (IFAC WC 2026), Busan, Korea.</p>
+<p class="status">Accepted; final manuscript submitted.</p>
+</article>
+<article class="pub" id="elsevier-chapter"><div class="pub-head"><div class="pub-title">Design and Control of Multi-Agent Robotic Systems for Extreme and Challenging Environments</div></div>
+<div class="org">Lead author</div>
+<p class="authors">D. Li et al.</p>
+<p class="citation">Invited chapter in Comprehensive Robotics for Extreme and Challenging Environments, Elsevier, edited by S. Watson.</p>
+<p class="status">Revised manuscript submitted.</p>
+</article></div></section><section class="section glass" id="projects"><div class="sec-head"><span class="eyebrow">03</span><h2>Projects &amp; Research Contributions</h2></div><div class="list"><article class="pub" id="local-workbenches"><div class="pub-head"><div class="pub-title">Local-First Teaching &amp; Student-Support Workbenches</div><span class="chip ghost">Sept. 2026 – Present</span></div>
+<div class="org">Personal Workflow Software Project</div>
+<ul><li>Built JavaScript workbenches for tutoring schedules, lesson preparation, feedback and student-support records, with offline caching and local JSON storage.</li><li>Added JSON Schema validation, backups, conflict checks and Markdown, CSV/XLSX and ICS export; covered storage workflows with Node.js regression tests.</li><li>Developed a separate Teacher Assistant app with FastAPI/SQLite and React/TypeScript for schedules, lesson plans, feedback and bilingual workflows.</li></ul>
+</article>
+<article class="pub" id="software-tools-2026"><div class="pub-head"><div class="pub-title">Research Software Applications</div><span class="chip ghost">2026</span></div>
+<div class="org">Personal software projects</div>
+<ul><li>Developed Paper Radar, a PySide6 app for Zotero-linked literature discovery and inspectable candidate ranking; released a macOS build.</li><li>Built CSF Pilot workflows for SSH/SFTP file access and Slurm job preparation, submission and monitoring; verified a live cluster login in the installed app.</li><li>Built FigForge data import, matplotlib line-chart editing and PDF/PNG export; released version 0.2.0.</li></ul>
+</article>
+<article class="pub" id="hackabot-2026"><div class="pub-head"><div class="pub-title">Hack-a-Bot Robotics Challenge</div><span class="chip ghost">Mar. 2026</span></div>
+<div class="org">Team Leader</div>
+<ul><li>Designed a two-robot system using centralised visual state estimates for target localisation and coordinated object pushing.</li><li>Integrated ArUco state estimation, A* path planning with smoothing and clearance-aware costs, and Pure Pursuit/PID control for navigation and trajectory tracking.</li><li>Synchronised two differential-drive robots for object pushing using embedded communication and real-time trajectory corrections.</li></ul>
+</article>
+<article class="pub" id="traffic-cones"><div class="pub-head"><div class="pub-title">Smart Traffic Cones Swarm Control</div><span class="chip ghost">Sept. 2023 – May 2024</span></div>
+<div class="org">The University of Manchester · Individual Project</div>
+<ul><li>Designed ESP32-based PCB control boards and implemented group robot coordination through Zigbee (802.15.4).</li><li>Developed bare-metal and RTOS firmware for ESP32/STM32, integrating ultrasonic sensing, motor drivers and embedded control.</li></ul>
+</article>
+<article class="pub" id="esp-buggy"><div class="pub-head"><div class="pub-title">ESP Buggy Development</div><span class="chip ghost">Sept. 2022 – May 2023</span></div>
+<div class="org">The University of Manchester · Technical Developer &amp; Team Leader</div>
+<ul><li>Led the development of an STM32-based autonomous tracking vehicle, including circuit and PCB design, hardware integration and analogue/digital feedback sensing.</li><li>Implemented PID control and managed project planning, scheduling and team task allocation.</li></ul>
+</article></div></section><section class="section glass" id="employment"><div class="sec-head"><span class="eyebrow">04</span><h2>Teaching &amp; Professional Experience</h2></div><div class="list"><article class="pub" id="gta"><div class="pub-head"><div class="pub-title">Graduate Teaching Assistant</div><span class="chip ghost">Sept. 2024 – Present</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Delivered laboratory sessions and tutorials across six undergraduate and postgraduate courses: Control Fundamentals and Process Automation; Control Systems 2; Nonlinear and Adaptive Control Systems; Applied Mechanics &amp; Industrial Robotics; Mobile Robots and Autonomous Systems; and Digital Electronics.</li><li>Guided students through control implementation, robot kinematics, embedded programming and digital-circuit design in laboratory sessions.</li><li>Marked coursework and examinations, wrote feedback, reviewed final-year project presentations and monitored project progress.</li><li>Completed 41 hours of EEEN11102 marking and course development in summer 2026.</li><li>Allocated to Principles of Electrical and Electronic Engineering (EEEN11101) for the 2026/27 academic year.</li></ul>
+</article>
+<article class="pub" id="process-control"><div class="pub-head"><div class="pub-title">Guest Lecturer &amp; Experiment Designer (Process Control)</div><span class="chip ghost">Jun. 2025 – Dec. 2025</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Designed and implemented an MSc process-control experiment using OPC communication between PLC and MATLAB.</li><li>Developed a PLC-based PID control scheme integrated with Simulink for real-time visualisation and analysis.</li><li>Delivered guest lectures and demonstrations on the PLC–MATLAB experiment and its PID control design.</li></ul>
+</article>
+<article class="pub" id="eic"><div class="pub-head"><div class="pub-title">Academic Tutor &amp; Campus Counsellor (Part-time)</div><span class="chip ghost">Apr. 2026 – Present</span></div>
+<div class="org">Education International Cooperation UK (EIC UK)</div>
+<ul><li>Delivered foundation mathematics and university tutorials in data structures and algorithms, theories of computation, computer systems, introductory artificial intelligence, linear algebra and differential equations.</li><li>Prepared course-specific handouts, worked examples and exam practice from official teaching materials; recorded lesson feedback, homework and follow-up plans.</li><li>Provided research-proposal and academic writing guidance, including the academic publication process; coached students on study skills and time management through online and in-person sessions.</li><li>From Sept. 2026, helped new Manchester students prepare for arrival, move into accommodation, register with the university and access local services; kept service and follow-up records.</li></ul>
+</article>
+<article class="pub" id="brilliant-club"><div class="pub-head"><div class="pub-title">Selected PhD Tutor (Scholars Programme)</div><span class="chip ghost">2026</span></div>
+<div class="org">The Brilliant Club</div>
+<ul><li>Selected as a tutor for The Scholars Programme, a university-access programme for pupils from under-represented backgrounds.</li></ul>
+</article></div></section><section class="section glass" id="education"><div class="sec-head"><span class="eyebrow">05</span><h2>Education</h2></div><div class="list"><article class="pub" id="phd"><div class="pub-head"><div class="pub-title">Doctor of Philosophy (in progress)</div><span class="chip ghost">Sept. 2024 – Present</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Research in multi-robot source seeking, Bayesian dual control, information fusion and safety-constrained decisions.</li></ul>
+</article>
+<article class="pub" id="beng"><div class="pub-head"><div class="pub-title">BEng (Hons.) in Electronic Engineering — First Class Honours</div><span class="chip ghost">Sept. 2021 – Jun. 2024</span></div>
+<div class="org">The University of Manchester</div>
+</article></div></section><section class="section glass" id="awards"><div class="sec-head"><span class="eyebrow">06</span><h2>Honours &amp; Awards</h2></div><div class="list"><article class="pub" id="iai-finalist"><div class="pub-head"><div class="pub-title">Best Paper Award Finalist — IAI 2026</div><span class="chip ghost">2026</span></div>
+<div class="org">8th International Conference on Industrial Artificial Intelligence</div>
+</article>
+<article class="pub" id="hackabot-third"><div class="pub-head"><div class="pub-title">Third Prize — Hack-a-Bot Robotics Challenge</div><span class="chip ghost">2026</span></div>
+<div class="org">UoM RoboSoc</div>
+</article>
+<article class="pub" id="poster-first"><div class="pub-head"><div class="pub-title">First Place Poster Prize — EEE Postgraduate Research Conference</div><span class="chip ghost">2025</span></div>
+<div class="org">The University of Manchester</div>
+</article>
+<article class="pub" id="hackabot-first"><div class="pub-head"><div class="pub-title">First Prize — Hack-a-Bot Robotics Challenge</div><span class="chip ghost">2025</span></div>
+<div class="org">UoM RoboSoc &amp; Sony</div>
+</article>
+<article class="pub" id="puzzlethon-second"><div class="pub-head"><div class="pub-title">Second Prize — NVIDIA PuzzleThon</div><span class="chip ghost">2024</span></div>
+<div class="org">The University of Manchester</div>
+</article></div></section><section class="section glass" id="service"><div class="sec-head"><span class="eyebrow">07</span><h2>Leadership &amp; Service</h2></div><div class="list"><article class="pub" id="peer-review-service"><div class="pub-head"><div class="pub-title">Peer Reviewer</div><span class="chip ghost">May–Oct. 2026</span></div>
+<div class="org">TIMC · IEEE TAES · JACA 2026</div>
+<ul><li>Completed five reviews: one each for TIMC and IEEE TAES, and three for JACA 2026 (the East China and Jiangsu Automation Annual Conference).</li></ul>
+</article>
+<article class="pub" id="phd-representative"><div class="pub-head"><div class="pub-title">EEE PGR Representative</div><span class="chip ghost">Oct. 2024 – Present</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Appointed lead EEE PGR departmental representative for 2025/26; brought student feedback to departmental staff, the Doctoral Academy and faculty representatives.</li><li>Raised research-student and GTA support concerns through departmental and faculty channels.</li></ul>
+</article>
+<article class="pub" id="student-ambassador"><div class="pub-head"><div class="pub-title">Student &amp; PGR Ambassador</div><span class="chip ghost">Oct. 2024 – Present</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Represented the university at open days and outreach events and answered questions about academic programmes, student life and campus facilities.</li><li>Demonstrated engineering and robotics projects in university laboratories.</li></ul>
+</article>
+<article class="pub" id="pass"><div class="pub-head"><div class="pub-title">PASS Leader — Peer-Assisted Study Sessions</div><span class="chip ghost">Sept. 2022 – Jun. 2024</span></div>
+<div class="org">The University of Manchester</div>
+<ul><li>Mentored more than 20 first-year students with three peer leaders in structured study sessions.</li></ul>
+</article></div></section><section class="section glass" id="skills"><div class="sec-head"><span class="eyebrow">08</span><h2>Skills</h2></div><div class="list"><article class="pub" id="skill-0"><div class="pub-head"><div class="pub-title">Research Methods</div></div>
+<ul><li>Bayesian estimation and dual control; experimental design; Monte Carlo and ablation studies; statistical analysis and optimisation; literature synthesis, academic writing and peer review.</li></ul>
+</article>
+<article class="pub" id="skill-1"><div class="pub-head"><div class="pub-title">Programming</div></div>
+<ul><li>C/C++; Python (NumPy, SciPy, pandas, Matplotlib); MATLAB; R; JavaScript/TypeScript; SQL; PIC18 assembly; PLC (Ladder Logic, SCL); Bash; HTML/CSS; Linux.</li></ul>
+</article>
+<article class="pub" id="skill-2"><div class="pub-head"><div class="pub-title">Control &amp; Robotics</div></div>
+<ul><li>PID, distributed and consensus control; formation control; active source seeking; A* and Pure Pursuit; multi-robot coordination; ROS; OpenCV/ArUco and CNN-based visual recognition.</li></ul>
+</article>
+<article class="pub" id="skill-3"><div class="pub-head"><div class="pub-title">Modelling &amp; Simulation</div></div>
+<ul><li>MATLAB/Simulink; LabVIEW/NI myDAQ; PLECS; Multisim; Tanner T-Spice/SPICE; ANSYS.</li></ul>
+</article>
+<article class="pub" id="skill-4"><div class="pub-head"><div class="pub-title">Hardware &amp; Embedded Systems</div></div>
+<ul><li>STM32/Mbed; PIC18F8722; ESP32/ESP8266; Arduino; Xilinx FPGA/VHDL; PCB prototyping; bare-metal and RTOS firmware.</li></ul>
+</article>
+<article class="pub" id="skill-9"><div class="pub-head"><div class="pub-title">Teaching &amp; Assessment</div></div>
+<ul><li>Syllabus-to-textbook and past-paper mapping; lesson and laboratory materials; rubric-based marking and feedback; one-to-one and small-group teaching; student follow-up.</li></ul>
+</article>
+<article class="pub" id="skill-11"><div class="pub-head"><div class="pub-title">Software Applications</div></div>
+<ul><li>Project experience with React/TypeScript/Vite, FastAPI/SQLite and PySide6/Qt; REST APIs and local-first browser/desktop tools.</li></ul>
+</article>
+<article class="pub" id="skill-13"><div class="pub-head"><div class="pub-title">Research Computing &amp; Discovery</div></div>
+<ul><li>Zotero and arXiv/OpenAlex literature retrieval; TF-IDF ranking; scientific data import and PDF/PNG figure export; Slurm job workflows.</li></ul>
+</article></div></section>
+<section class="section glass" id="cv-versions"><div class="sec-head"><span class="eyebrow">09</span><h2>Browse CV versions</h2></div><div class="cta-row"><a class="btn ghost" href="cv/20261006_Donglin_CV_综合方向_英文_网页版.html">综合方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_学术方向_英文_网页版.html">学术方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_工程方向_英文_网页版.html">工程方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_教职方向_英文_网页版.html">教职方向</a></div></section>
+<section class="section glass contact" id="contact"><div class="sec-head"><span class="eyebrow">10</span><h2>Contact</h2></div><ul>
+<li><a href="mailto:Donglin.Li@Manchester.ac.uk">Donglin.Li@Manchester.ac.uk</a></li><li><a href="mailto:Dennis.Li201@outlook.com">Dennis.Li201@outlook.com</a></li>
+<li><a href="https://github.com/Daihaolin201">GitHub</a> · <a href="https://www.linkedin.com/in/donglin-li-55424326b">LinkedIn</a> · <a href="https://orcid.org/0009-0007-2130-4862">ORCID</a></li></ul></section>
+<footer>Donglin (Dennis) Li · Updated 6 October 2026</footer>
+</main></div>
+<script src="assets/liquid-glass-home.js"></script>
+</body></html>

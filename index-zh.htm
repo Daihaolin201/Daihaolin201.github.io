@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="研究分布式控制、多机器人协同寻源和不确定性感知决策；结合算法设计、嵌入式机器人实践，以及教学和学生支持工作。"><meta name="color-scheme" content="dark">
+<title>李栋林（Dennis） | 研究 · 工程 · 教学</title>
+<link rel="icon" href="images/avatar.jpg">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="stylesheet" href="assets/liquid-glass-home.css">
+</head>
+<body>
+<a class="skip-link" href="#about">跳至正文</a>
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+<canvas id="agents" aria-hidden="true"></canvas><div class="grid" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div><div class="spotlight" id="spotlight" aria-hidden="true"></div>
+<div class="container">
+<nav class="top-nav glass" aria-label="主导航"><div class="brand">李栋林（Dennis）</div><div class="menu" id="menu"><a href="#about">关于</a><a href="#research">研究</a><a href="#publications">论文</a><a href="#projects">项目</a><a href="#employment">经历</a><a href="#awards">荣誉</a><a href="#service">服务</a><a href="#contact">联系</a><a class="lang-btn" href="index.htm" lang="en">English</a></div></nav>
+<aside><section class="profile glass section"><div class="avatar-wrap"><img class="avatar" src="images/avatar.jpg" alt="李栋林（Dennis）" width="128" height="128"></div>
+<div class="center"><h2>李栋林（Dennis）</h2><div class="small">曼彻斯特大学 · 电气与电子工程博士研究生</div><div class="small">更新于 2026 年 10 月 6 日</div></div>
+<div class="quick"><a href="cv/20261006_Donglin_CV_综合方向_中文_网页版.html">完整简历</a><a href="mailto:Donglin.Li@Manchester.ac.uk">邮件</a><a href="https://github.com/Daihaolin201">GitHub</a><a href="https://www.linkedin.com/in/donglin-li-55424326b">LinkedIn</a><a href="#publications">最新成果</a></div></section></aside>
+<main>
+<section class="section glass" id="about"><div class="kicker">曼彻斯特大学 · 电气与电子工程博士研究生</div><div class="hero-top"><h1>让多机器人在不确定环境中协同决策。<span class="caret">_</span></h1></div>
+<p>研究分布式控制、多机器人协同寻源和不确定性感知决策；结合算法设计、嵌入式机器人实践，以及教学和学生支持工作。</p>
+<div class="stats"><div class="stat"><span class="stat-num" data-count="2">02</span><span class="stat-label">第一作者已接收论文</span></div><div class="stat"><span class="stat-num" data-count="1">01</span><span class="stat-label">已在线发表期刊论文</span></div><div class="stat"><span class="stat-num" data-count="5">05</span><span class="stat-label">已审阅学术稿件</span></div></div>
+<div class="cta-row"><a class="btn primary" href="#publications">最新成果</a><a class="btn ghost" href="cv/20261006_Donglin_CV_综合方向_中文_网页版.html">完整简历</a></div></section>
+<section class="section glass" id="research"><div class="sec-head"><span class="eyebrow">01</span><h2>研究经历</h2></div><div class="list"><article class="pub" id="phd-dcee"><div class="pub-head"><div class="pub-title">多机器人协同源搜索与探索—利用双重控制（DCEE）</div><span class="chip ghost">2024.09—至今</span></div>
+<div class="org">曼彻斯特大学 · 博士研究生</div>
+<ul><li>在仿真中研究多机器人协同源搜索，结合贝叶斯对偶控制、后验均值共识融合与安全约束动作投影。</li><li>通过 30 组随机种子仿真和消融实验评估迹归一化事件触发通信及逆迹加权融合，分析异构传感和通信扰动条件下通信包数与 RMSE 的权衡。</li><li>参加电气与电子工程研究生研究会议海报展示，交流算法设计与仿真结果。</li><li>以第一作者完成 CCC 2026 和 IAI 2026 已接收论文；IAI 论文获最佳论文奖入围。</li></ul>
+</article>
+<article class="pub" id="llm-planner-offline"><div class="pub-head"><div class="pub-title">语言指令驱动的多机器人规划</div><span class="chip ghost">2026—至今</span></div>
+<div class="org">曼彻斯特大学 · 合作博士研究</div>
+<p class="status">离线原型与仿真评估（进行中）。</p>
+<ul><li>参与开发语言指令驱动的多机器人对偶控制离线原型，加入 JSON 指令解析、约束检查和基础控制器回退机制。</li><li>使用本地 MATLAB/Python 测试样例和仿真，检查异常输出、命令执行失败及缓存行为。</li></ul>
+</article>
+<article class="pub" id="world-model-reliability"><div class="pub-head"><div class="pub-title">面向闭环决策的世界模型可靠性</div><span class="chip ghost">2026—至今</span></div>
+<div class="org">合作综述研究</div>
+<p class="status">内部综述稿（进行中）。</p>
+<ul><li>参与世界模型综述，按物理约束、因果一致性、不确定性和决策一致性整理机器人及自动驾驶文献。</li><li>整理基准对比和文献证据表，并检查可复现图表与配套材料的一致性。</li></ul>
+</article>
+<article class="pub" id="prehardware-source-seeking"><div class="pub-head"><div class="pub-title">源搜索约束研究与硬件测试准备</div><span class="chip ghost">2026—至今</span></div>
+<div class="org">曼彻斯特大学 · 合作博士研究</div>
+<p class="status">硬件前约束仿真（进行中）。</p>
+<ul><li>参与计算资源限制、过期数据与丢包、传感器偏差及执行延迟的仿真测试，准备后续 ROS 2 集成的验证条件。</li></ul>
+</article></div></section><section class="section glass" id="publications"><div class="sec-head"><span class="eyebrow">02</span><h2>论文与出版成果</h2></div><div class="list"><article class="pub" id="ccc-2026"><div class="pub-head"><div class="pub-title">Dual Control for Multi-Robot Source Seeking with Consensus Mean Fusion and Safety Projection</div><span class="chip ghost">2026</span></div>
+<div class="org">第一作者</div>
+<p class="authors">Donglin Li, Zhongguo Li, Hanbo Ma, Chunyi Cao, Zhengtao Ding</p>
+<p class="citation">第45届中国控制会议（CCC 2026），中国长沙，2026。</p>
+<p class="status">已接收；终稿已提交。</p>
+</article>
+<article class="pub" id="iai-2026"><div class="pub-head"><div class="pub-title">Trace-Weighted Event-Triggered Mean Fusion for Efficient Multi-Robot Source Seeking</div><span class="chip ghost">2026</span></div>
+<div class="org">第一作者</div>
+<p class="authors">Donglin Li, Zhongguo Li, Junan Wang, Hanbo Ma, Zhengtao Ding</p>
+<p class="citation">第8届工业人工智能国际会议（IAI 2026），中国沈阳，2026。</p>
+<p class="status">已接收；终稿已提交；最佳论文奖入围。</p>
+</article>
+<article class="pub" id="neurocomputing-2026"><div class="pub-head"><div class="pub-title">Load Balancing for Large Language Model Inference Serving: A Control and Learning Oriented Survey</div><span class="chip ghost">2026</span></div>
+<div class="org">共同作者</div>
+<p class="authors">Hanbo Ma, Zhongguo Li, Junan Wang, Chunyi Cao, Donglin Li, Jun Yang, Zhengtao Ding</p>
+<p class="citation">Neurocomputing 706（2026），134973。</p>
+<p class="status">已在线发表（2026.09.03）。</p>
+<p><a href="https://doi.org/10.1016/j.neucom.2026.134973">doi:10.1016/j.neucom.2026.134973</a></p>
+</article>
+<article class="pub" id="ifac-2026"><div class="pub-head"><div class="pub-title">Multi-Objective Pipeline Scheduling for LLM Inference in Heterogeneous DePIN</div><span class="chip ghost">2026</span></div>
+<div class="org">共同作者</div>
+<p class="authors">Hanbo Ma, Zhongguo Li, Chunyi Cao, Donglin Li, Zhengtao Ding</p>
+<p class="citation">第23届 IFAC 世界大会（IFAC WC 2026），韩国釜山，2026。</p>
+<p class="status">已接收；终稿已提交。</p>
+</article>
+<article class="pub" id="elsevier-chapter"><div class="pub-head"><div class="pub-title">Design and Control of Multi-Agent Robotic Systems for Extreme and Challenging Environments</div></div>
+<div class="org">主要作者</div>
+<p class="authors">Donglin Li et al.</p>
+<p class="citation">Elsevier，Comprehensive Robotics for Extreme and Challenging Environments。</p>
+<p class="status">受邀书章；修订稿已提交。</p>
+</article></div></section><section class="section glass" id="projects"><div class="sec-head"><span class="eyebrow">03</span><h2>项目经历</h2></div><div class="list"><article class="pub" id="local-workbenches"><div class="pub-head"><div class="pub-title">本地教学与学生支持工作台</div><span class="chip ghost">2026.09—至今</span></div>
+<div class="org">个人工作流软件项目</div>
+<ul><li>用 JavaScript 开发辅导排课、备课、反馈和校园支持记录工作台，支持离线缓存与本地 JSON 保存。</li><li>实现 JSON Schema 校验、备份与冲突检查、Markdown/CSV/XLSX/ICS 导出，并以 Node.js 测试覆盖存储流程。</li><li>另开发 FastAPI/SQLite 与 React/TypeScript 教学助手，处理排课、教案、反馈和中英双语界面。</li></ul>
+</article>
+<article class="pub" id="software-tools-2026"><div class="pub-head"><div class="pub-title">研究软件工具（Paper Radar、CSF Pilot、FigForge）</div><span class="chip ghost">2026</span></div>
+<div class="org">个人软件项目</div>
+<ul><li>开发 Paper Radar 桌面应用，关联 Zotero 文献并提供候选论文检索、排序与结果导出；已发布 macOS 版本。</li><li>开发 CSF Pilot 的 SSH/SFTP 文件访问和 Slurm 作业准备、提交与监控流程；已在安装版中验证实际集群登录。</li><li>开发 FigForge 的数据导入、matplotlib 折线图编辑及 PDF/PNG 导出；已发布 0.2.0 版本。</li></ul>
+</article>
+<article class="pub" id="hackabot-2026"><div class="pub-head"><div class="pub-title">Hack-a-Bot 机器人挑战赛</div><span class="chip ghost">2026.03</span></div>
+<div class="org">曼彻斯特大学 RoboSoc · 团队负责人</div>
+<ul><li>设计双机器人自主协作系统，以集中式视觉状态估计支持目标定位和协同搬运。</li><li>集成 ArUco 状态估计、含安全间距代价的 A* 规划与路径平滑，以及 Pure Pursuit 和 PID 差速驱动控制。</li><li>通过嵌入式通信同步两台机器人，按实时反馈修正推物轨迹。</li></ul>
+</article>
+<article class="pub" id="traffic-cones"><div class="pub-head"><div class="pub-title">智能交通锥群体控制</div><span class="chip ghost">2023.09—2024.05</span></div>
+<div class="org">个人项目</div>
+<ul><li>设计 ESP32 机器人 PCB 控制板，通过 Zigbee（802.15.4）实现群体通信与控制。</li><li>开发 ESP32 与 STM32 的裸机及 RTOS 固件，集成超声传感器、电机驱动和嵌入式通信。</li></ul>
+</article>
+<article class="pub" id="esp-buggy"><div class="pub-head"><div class="pub-title">ESP 自主循迹车开发</div><span class="chip ghost">2022.09—2023.05</span></div>
+<div class="org">曼彻斯特大学 · 技术开发与团队负责人</div>
+<ul><li>负责 STM32 循迹车的电路、PCB、硬件集成、模拟与数字反馈传感及 PID 控制设计。</li><li>组织项目计划、进度安排与团队任务分配。</li></ul>
+</article></div></section><section class="section glass" id="employment"><div class="sec-head"><span class="eyebrow">04</span><h2>教学与工作经历</h2></div><div class="list"><article class="pub" id="gta"><div class="pub-head"><div class="pub-title">研究生助教</div><span class="chip ghost">2024.09—至今</span></div>
+<div class="org">曼彻斯特大学</div>
+<ul><li>承担控制基础与过程自动化、控制系统 2、非线性与自适应控制系统、应用力学与工业机器人、移动机器人与自主系统、数字电子六门本科及研究生课程的实验与习题课教学。</li><li>在实验与习题课中指导控制系统实现、机器人运动学、嵌入式编程和数字电路练习。</li><li>按评分标准评阅作业和考试，并向学生提供反馈。</li><li>2026 年夏季为 EEEN11102 完成 41 小时阅卷与课程开发工作。</li><li>在毕业设计展示与答辩期间，就学生方案提供技术意见并跟进项目进度。</li><li>获安排参与 2026/27 学年 EEEN11101《电气与电子工程原理》课程助教工作。</li></ul>
+</article>
+<article class="pub" id="process-control"><div class="pub-head"><div class="pub-title">客座讲师与实验设计者（过程控制）</div><span class="chip ghost">2025.06—2025.12</span></div>
+<div class="org">曼彻斯特大学</div>
+<ul><li>设计硕士过程控制实验，用 OPC 连接 PLC 与 MATLAB。</li><li>开发 PLC 的 PID 控制方案，并接入 Simulink 进行实时可视化与分析。</li><li>讲授过程自动化原理，演示并指导硕士生完成实验。</li></ul>
+</article>
+<article class="pub" id="brilliant-club"><div class="pub-head"><div class="pub-title">Scholars Programme 项目导师（已入选）</div><span class="chip ghost">2026</span></div>
+<div class="org">The Brilliant Club</div>
+<ul><li>入选面向教育资源不足学生的大学升学支持项目导师库。</li></ul>
+</article>
+<article class="pub" id="eic"><div class="pub-head"><div class="pub-title">学术辅导教师兼校园辅导员（兼职）</div><span class="chip ghost">2026.04—至今</span></div>
+<div class="org">启德英国（EIC UK）</div>
+<ul><li>开展预科数学及大学课程辅导，涵盖人工智能基础、数据结构与算法、计算理论、计算机系统、线性代数和常微分方程。</li><li>依据课程资料编写讲义、例题和考前练习，记录课后反馈、作业及后续学习安排。</li><li>通过线上及线下辅导提供研究计划与学术写作指导。</li><li>自 2026 年 9 月起参与曼彻斯特大学新生校园支持，协助行前准备、抵达入住、学校注册和本地生活事务，并维护服务记录及跟进报告。</li></ul>
+</article></div></section><section class="section glass" id="education"><div class="sec-head"><span class="eyebrow">05</span><h2>教育背景</h2></div><div class="list"><article class="pub" id="phd"><div class="pub-head"><div class="pub-title">电气与电子工程博士（在读）</div><span class="chip ghost">2024.09—至今</span></div>
+<div class="org">曼彻斯特大学</div>
+<ul><li>研究多机器人源搜索中的贝叶斯对偶控制、协同信息融合与安全约束。</li></ul>
+</article>
+<article class="pub" id="beng"><div class="pub-head"><div class="pub-title">电子工程荣誉学士（一等荣誉学位）</div><span class="chip ghost">2021.09—2024.06</span></div>
+<div class="org">曼彻斯特大学</div>
+</article></div></section><section class="section glass" id="awards"><div class="sec-head"><span class="eyebrow">06</span><h2>荣誉与奖励</h2></div><div class="list"><article class="pub" id="iai-finalist"><div class="pub-head"><div class="pub-title">第8届工业人工智能国际会议（IAI 2026）最佳论文奖入围</div><span class="chip ghost">2026</span></div>
+</article>
+<article class="pub" id="hackabot-third"><div class="pub-head"><div class="pub-title">Hack-a-Bot 机器人挑战赛三等奖</div><span class="chip ghost">2026</span></div>
+<div class="org">曼彻斯特大学 RoboSoc</div>
+</article>
+<article class="pub" id="poster-first"><div class="pub-head"><div class="pub-title">电气与电子工程研究生研究会议海报一等奖</div><span class="chip ghost">2025</span></div>
+<div class="org">曼彻斯特大学</div>
+</article>
+<article class="pub" id="hackabot-first"><div class="pub-head"><div class="pub-title">Hack-a-Bot 机器人挑战赛一等奖</div><span class="chip ghost">2025</span></div>
+<div class="org">曼彻斯特大学 RoboSoc 与 Sony</div>
+</article>
+<article class="pub" id="puzzlethon-second"><div class="pub-head"><div class="pub-title">NVIDIA PuzzleThon 二等奖</div><span class="chip ghost">2024</span></div>
+<div class="org">曼彻斯特大学</div>
+</article></div></section><section class="section glass" id="service"><div class="sec-head"><span class="eyebrow">07</span><h2>服务与领导经历</h2></div><div class="list"><article class="pub" id="peer-review-service"><div class="pub-head"><div class="pub-title">学术论文审稿人</div><span class="chip ghost">2026.05—2026.10</span></div>
+<div class="org">TIMC · IEEE TAES · JACA 2026</div>
+<ul><li>完成 5 篇期刊及会议稿件评审：TIMC、IEEE TAES 各 1 篇，JACA 2026（第39届华东六省一市自动化学会学术年会暨江苏省自动化学术年会）3 篇。</li></ul>
+</article>
+<article class="pub" id="phd-representative"><div class="pub-head"><div class="pub-title">EEE 博士生代表</div><span class="chip ghost">2024.10—至今</span></div>
+<div class="org">曼彻斯特大学电气与电子工程系</div>
+<ul><li>自 2025 年 10 月起任部门代表负责人，收集博士生及助教意见，并向 Doctoral Academy 和院系反馈。</li></ul>
+</article>
+<article class="pub" id="student-ambassador"><div class="pub-head"><div class="pub-title">学生大使兼博士生大使（PGR Ambassador）</div><span class="chip ghost">2024.10—至今</span></div>
+<div class="org">曼彻斯特大学</div>
+<ul><li>在开放日和外展活动中向申请者及家长介绍课程、校园生活，并演示工程与机器人实验室项目。</li></ul>
+</article>
+<article class="pub" id="pass"><div class="pub-head"><div class="pub-title">PASS 学习小组导师</div><span class="chip ghost">2022.09—2024.06</span></div>
+<div class="org">曼彻斯特大学同伴互助学习项目</div>
+<ul><li>与三位同伴共同组织面向 20 余名一年级学生的学习小组。</li></ul>
+</article></div></section><section class="section glass" id="skills"><div class="sec-head"><span class="eyebrow">08</span><h2>专业技能</h2></div><div class="list"><article class="pub" id="skill-0"><div class="pub-head"><div class="pub-title">研究方法</div></div>
+<ul><li>贝叶斯估计与对偶控制；实验设计；蒙特卡洛仿真与消融实验；统计分析与优化；文献综述、学术写作和同行评审。</li></ul>
+</article>
+<article class="pub" id="skill-1"><div class="pub-head"><div class="pub-title">编程</div></div>
+<ul><li>C/C++；Python（NumPy、SciPy、pandas、Matplotlib）；MATLAB；R；JavaScript/TypeScript；SQL；PIC18 汇编；PLC 梯形图/SCL；Bash；HTML/CSS；Linux。</li></ul>
+</article>
+<article class="pub" id="skill-2"><div class="pub-head"><div class="pub-title">控制与机器人</div></div>
+<ul><li>PID、分布式与一致性控制、编队与主动源搜索；A* 和 Pure Pursuit；多机器人协同；ROS、OpenCV/ArUco 和 CNN 视觉识别。</li></ul>
+</article>
+<article class="pub" id="skill-3"><div class="pub-head"><div class="pub-title">建模与仿真</div></div>
+<ul><li>MATLAB/Simulink；LabVIEW/NI myDAQ；PLECS；Multisim；Tanner T-Spice/SPICE；ANSYS。</li></ul>
+</article>
+<article class="pub" id="skill-4"><div class="pub-head"><div class="pub-title">硬件与嵌入式</div></div>
+<ul><li>STM32/Mbed、PIC18F8722、ESP32/ESP8266、Arduino、Xilinx FPGA/VHDL；PCB 原型；裸机与 RTOS 固件。</li></ul>
+</article>
+<article class="pub" id="skill-9"><div class="pub-head"><div class="pub-title">教学与评价</div></div>
+<ul><li>考纲—教材—真题映射；讲义与实验教学资料；按评分标准阅卷和反馈；一对一与小组辅导；学生后续跟进。</li></ul>
+</article>
+<article class="pub" id="skill-11"><div class="pub-head"><div class="pub-title">软件应用开发</div></div>
+<ul><li>在项目中使用 React/TypeScript/Vite、FastAPI/SQLite、PySide6/Qt；开发 REST API 及本地优先网页和桌面工具。</li></ul>
+</article>
+<article class="pub" id="skill-13"><div class="pub-head"><div class="pub-title">研究计算与文献工具</div></div>
+<ul><li>Zotero 与 arXiv/OpenAlex 文献检索、TF-IDF 排序；科研数据导入和 PDF/PNG 图表导出；Slurm 作业工作流。</li></ul>
+</article></div></section>
+<section class="section glass" id="cv-versions"><div class="sec-head"><span class="eyebrow">09</span><h2>浏览各版简历</h2></div><div class="cta-row"><a class="btn ghost" href="cv/20261006_Donglin_CV_综合方向_中文_网页版.html">综合方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_学术方向_中文_网页版.html">学术方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_工程方向_中文_网页版.html">工程方向</a><a class="btn ghost" href="cv/20261006_Donglin_CV_教职方向_中文_网页版.html">教职方向</a></div></section>
+<section class="section glass contact" id="contact"><div class="sec-head"><span class="eyebrow">10</span><h2>联系</h2></div><ul>
+<li><a href="mailto:Donglin.Li@Manchester.ac.uk">Donglin.Li@Manchester.ac.uk</a></li><li><a href="mailto:Dennis.Li201@outlook.com">Dennis.Li201@outlook.com</a></li>
+<li><a href="https://github.com/Daihaolin201">GitHub</a> · <a href="https://www.linkedin.com/in/donglin-li-55424326b">LinkedIn</a> · <a href="https://orcid.org/0009-0007-2130-4862">ORCID</a></li></ul></section>
+<footer>李栋林（Dennis） · 更新于 2026 年 10 月 6 日</footer>
+</main></div>
+<script src="assets/liquid-glass-home.js"></script>
+</body></html>
