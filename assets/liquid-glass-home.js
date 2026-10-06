@@ -1,6 +1,6 @@
 /* Restored from Daihaolin201.github.io commit 7d270d8; static bilingual pages replace old i18n hooks. */
 /* ---- active-section nav highlight ---- */
-    const sections = ["about", "research", "publications", "projects", "experience", "awards", "service", "contact"];
+    const sections = ["about", "research", "publications", "projects", "employment", "awards", "service", "contact"];
     const menuMap = new Map(sections.map((id) => [id, document.querySelector(`.menu a[href="#${id}"]`)]));
     const navObserver = new IntersectionObserver((entries) => {
       let current = null, maxRatio = 0;
@@ -13,34 +13,6 @@
     sections.forEach((id) => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    /* ---- boot sequence: one-shot mission-control intro (skippable, once per session) ---- */
-    (function () {
-      let seen = null;
-      try { seen = sessionStorage.getItem("boot-seen"); } catch (e) {}
-      if (reduceMotion || seen) return;
-      try { sessionStorage.setItem("boot-seen", "1"); } catch (e) {}
-      const o = document.createElement("div");
-      o.id = "boot"; o.setAttribute("aria-hidden", "true");
-      o.style.cssText = "position:fixed;inset:0;z-index:80;background:#04070f;display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;cursor:pointer;";
-      o.innerHTML = '<pre style="font-family:var(--mono);font-size:12px;line-height:1.8;color:#7dd3fc;margin:0;text-shadow:0 0 14px rgba(34,211,238,.45)"></pre>';
-      document.body.appendChild(o);
-      const pre = o.querySelector("pre");
-      const lines = [
-        "◤ DENNIS.LI — SWARM CONSOLE v2",
-        "> spawning agents ............ OK",
-        "> mesh link / consensus ...... OK",
-        "> bayesian belief filter ..... OK",
-        "> source-seeking online — welcome."
-      ];
-      let li = 0;
-      (function next() {
-        if (!o.isConnected) return;
-        if (li < lines.length) { pre.textContent += (li ? "\n" : "") + lines[li++]; setTimeout(next, 130); }
-        else setTimeout(() => { o.style.opacity = "0"; setTimeout(() => o.remove(), 500); }, 380);
-      })();
-      o.addEventListener("pointerdown", () => o.remove());
-    })();
 
     /* ---- scroll reveal + stat count-up ---- */
     const reveal = new IntersectionObserver((entries) => {
@@ -318,8 +290,6 @@
           ctx.beginPath(); ctx.moveTo(Math.cos(ang) * (rr - 5), Math.sin(ang) * (rr - 5)); ctx.lineTo(Math.cos(ang) * (rr + 5), Math.sin(ang) * (rr + 5)); ctx.stroke();
         }
         ctx.restore();
-        ctx.fillStyle = "#34d399"; ctx.globalAlpha = 0.85; ctx.font = '9px ui-monospace, "SF Mono", Menlo, monospace';
-        ctx.fillText("LOCK", source.x + rr + 9, source.y + 3);
         ctx.globalAlpha = 1;
       }
       // swarm belief: 1-sigma covariance ellipse of agent positions (marching-ants) + centroid crosshair
