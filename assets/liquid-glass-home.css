@@ -257,6 +257,20 @@
     .pub-title { font-weight: 620; color: var(--ink); font-size: 0.98rem; }
     .pub p { margin: 0.4rem 0 0; font-size: 0.9rem; }
     .list { display: grid; gap: 0.7rem; }
+    .latest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .latest-grid .pub { margin-top: 0; }
+    .more-list { margin-top: 0.85rem; border-top: 1px solid rgba(125,178,255,0.12); padding-top: 0.75rem; }
+    .more-list > summary {
+      width: fit-content; cursor: pointer; list-style: none; color: var(--cyan);
+      font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.02em;
+      padding: 0.48rem 0.72rem; border: 1px solid var(--edge); border-radius: 999px;
+      background: rgba(34,211,238,0.07); transition: background .2s ease, border-color .2s ease;
+    }
+    .more-list > summary::-webkit-details-marker { display: none; }
+    .more-list > summary::before { content: "+ "; }
+    .more-list[open] > summary::before { content: "− "; }
+    .more-list > summary:hover { background: rgba(34,211,238,0.14); border-color: var(--edge-strong); }
+    .more-list > .list { margin-top: 0.75rem; }
     .pub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; }
     .org { font-family: var(--mono); font-size: 0.8rem; color: var(--cyan); margin-top: 0.2rem; opacity: 0.92; }
     .chip { flex-shrink: 0; font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.22rem 0.55rem; border-radius: 999px; color: #04121c; background: linear-gradient(120deg, var(--cyan), var(--sky)); white-space: nowrap; box-shadow: 0 4px 14px rgba(34,211,238,0.25); }
@@ -266,7 +280,7 @@
     .skill-row:first-child { border-top: 0; padding-top: 0.1rem; }
     .skill-label { font-family: var(--mono); font-size: 0.82rem; color: var(--cyan); }
     .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    @media (max-width: 640px) { .skill-row { grid-template-columns: 1fr; gap: 0.35rem; } .pub-head { flex-wrap: wrap; } }
+    @media (max-width: 640px) { .skill-row { grid-template-columns: 1fr; gap: 0.35rem; } .pub-head { flex-wrap: wrap; } .latest-grid { grid-template-columns: 1fr; } }
 
     #projects .grid-cards { display: grid; gap: 0.7rem; }
     @media (min-width: 720px) { #projects .grid-cards { grid-template-columns: 1fr 1fr; } #projects .pub { margin-top: 0; } }
