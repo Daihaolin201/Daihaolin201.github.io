@@ -215,3 +215,223 @@ test('telemetry: 5xx downstream response reports error without throwing when fet
     globalThis.fetch = origFetch;
   }
 });
+
+test('decoy route: GET /d/<token> posts synchronously once and returns neutral HTML on decoy_hit: true', async () => {
+  const origFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init, body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({ ok: true, recorded: 1, decoy_hit: true }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    const env = makeEnv({
+      TELEMETRY_URL: 'https://hub.example/_hub/telemetry',
+      TELEMETRY_TOKEN: 'decoy-secret-tok',
+    });
+    const ctx = makeCtx();
+    const req = new Request('https://donglinli.com/d/tok12345678?ref=cv', {
+      headers: {
+        'cf-connecting-ip': '203.0.113.77',
+        'user-agent': 'DecoyProbe/1.0',
+        referer: 'https://user:pass@example.org/doc',
+      },
+    });
+    req.cf = { country: 'US', region: 'California', city: 'San Jose', timezone: 'America/Los_Angeles' };
+
+    const res = await router.fetch(req, env, ctx);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'text/html; charset=utf-8');
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal(res.headers.get('content-security-policy'), "default-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+
+    const html = await res.text();
+    assert.match(html, /Archived Reference Note/);
+    assert.equal(/honeypot|decoy|tracking|donglin/i.test(html), false);
+
+    assert.equal(ctx.tasks.length, 0, 'decoy route must not schedule duplicate waitUntil beacon');
+    await Promise.all(ctx.tasks);
+    assert.equal(calls.length, 1, 'telemetry POST must be sent exactly once');
+    assert.equal(calls[0].url, 'https://hub.example/_hub/telemetry');
+    assert.equal(calls[0].init.method, 'POST');
+    assert.equal(calls[0].init.headers['content-type'], 'application/json');
+    assert.equal(calls[0].init.headers.authorization, 'Bearer decoy-secret-tok');
+    assert.ok(calls[0].init.signal instanceof AbortSignal);
+
+    const payload = calls[0].body;
+    assert.equal(payload.host, 'donglinli.com');
+    assert.equal(payload.path, '/d/tok12345678');
+    assert.equal(payload.method, 'GET');
+    assert.equal(payload.status, 200);
+    assert.equal(payload.ip, '203.0.113.77');
+    assert.equal(payload.country, 'US');
+    assert.equal(payload.region, 'California');
+    assert.equal(payload.city, 'San Jose');
+    assert.equal(payload.timezone, 'America/Los_Angeles');
+    assert.equal(payload.user_agent, 'DecoyProbe/1.0');
+    assert.equal(payload.referer, 'https://example.org/doc');
+    assert.equal(typeof payload.ts, 'number');
+    assert.equal(env.seen.assets.length, 0);
+    assert.equal(env.seen.hub.length, 0);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('decoy route: HEAD /t/<token> returns 200 with empty body and security headers when decoy_hit: true', async () => {
+  const origFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({ ok: true, recorded: 1, decoy_hit: true }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    const env = makeEnv({
+      TELEMETRY_URL: '  https://hub.example/_hub/telemetry  ',
+      TELEMETRY_TOKEN: 'tok',
+    });
+    const ctx = makeCtx();
+    const res = await router.fetch(new Request('https://donglinli.com/t/tok12345678', { method: 'HEAD' }), env, ctx);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('content-type'), 'text/html; charset=utf-8');
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal(res.headers.get('content-security-policy'), "default-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(await res.text(), '');
+    assert.equal(ctx.tasks.length, 0);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, 'https://hub.example/_hub/telemetry');
+    assert.equal(calls[0].body.method, 'HEAD');
+    assert.equal(calls[0].body.path, '/t/tok12345678');
+    assert.equal(calls[0].body.status, 200);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('decoy route: unregistered or revoked decoy (decoy_hit: false) fails closed with 404 and sends once', async () => {
+  const origFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ ok: true, recorded: 1, decoy_hit: false }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    const env = makeEnv({ TELEMETRY_URL: 'https://hub.example/_hub/telemetry', TELEMETRY_TOKEN: 'tok' });
+    const ctx = makeCtx();
+    const res = await router.fetch(new Request('https://donglinli.com/d/revoked_token1'), env, ctx);
+    assert.equal(res.status, 404);
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal(await res.text(), '');
+    assert.equal(calls, 1);
+    assert.equal(ctx.tasks.length, 0);
+    assert.equal(env.seen.assets.length, 0);
+    assert.equal(env.seen.hub.length, 0);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('decoy route: telemetry 500, timeout/error, bad JSON, or missing TELEMETRY_URL fail closed with 404', async () => {
+  const origFetch = globalThis.fetch;
+  try {
+    const scenarios = [
+      async () => new Response('server error', { status: 500 }),
+      async () => { throw new DOMException('timed out', 'TimeoutError'); },
+      async () => new Response('not-json', { status: 200, headers: { 'content-type': 'application/json' } }),
+    ];
+    for (const mockFetch of scenarios) {
+      let calls = 0;
+      globalThis.fetch = async () => { calls += 1; return mockFetch(); };
+      const env = makeEnv({ TELEMETRY_URL: 'https://hub.example/_hub/telemetry' });
+      const ctx = makeCtx();
+      const res = await router.fetch(new Request('https://donglinli.com/d/tok12345678'), env, ctx);
+      assert.equal(res.status, 404);
+      assert.equal(res.headers.get('cache-control'), 'no-store');
+      assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow');
+      assert.equal(await res.text(), '');
+      assert.equal(calls, 1);
+      assert.equal(ctx.tasks.length, 0);
+    }
+
+    let missingCalls = 0;
+    globalThis.fetch = async () => { missingCalls += 1; return new Response('{}'); };
+    const ctxMissing = makeCtx();
+    const resMissing = await router.fetch(new Request('https://donglinli.com/d/tok12345678'), makeEnv(), ctxMissing);
+    assert.equal(resMissing.status, 404);
+    assert.equal(resMissing.headers.get('cache-control'), 'no-store');
+    assert.equal(resMissing.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal(missingCalls, 0);
+    assert.equal(ctxMissing.tasks.length, 0);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('decoy route: non-GET/HEAD on ORIGIN and /d/ or /t/ on non-ORIGIN hosts fail closed 404 without hitting DO or ASSETS', async () => {
+  const origFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls += 1; return new Response(JSON.stringify({ ok: true, decoy_hit: true })); };
+  try {
+    const env = makeEnv({ TELEMETRY_URL: 'https://hub.example/_hub/telemetry', TELEMETRY_TOKEN: 'tok' });
+    const ctx = makeCtx();
+
+    const postRes = await router.fetch(new Request('https://donglinli.com/d/tok12345678', { method: 'POST' }), env, ctx);
+    assert.equal(postRes.status, 404);
+    assert.equal(postRes.headers.get('cache-control'), 'no-store');
+
+    for (const badUrl of [
+      'https://site.workers.dev/d/tok12345678',
+      'https://site.workers.dev/t/tok12345678',
+      'https://pgr.donglinli.com/d/tok12345678',
+      'https://donglinli.com/d/short',
+    ]) {
+      const r = await router.fetch(new Request(badUrl), env, ctx);
+      assert.equal(r.status, 404, badUrl);
+      assert.equal(r.headers.get('cache-control'), 'no-store');
+    }
+
+    await Promise.all(ctx.tasks);
+    assert.equal(calls, 0);
+    assert.equal(env.seen.assets.length, 0);
+    assert.equal(env.seen.hub.length, 0);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('decoy route: normal site pages (/cv/, /) still use ASSETS and async telemetry beacon', async () => {
+  const origFetch = globalThis.fetch;
+  const beacons = [];
+  globalThis.fetch = async (url, init) => {
+    beacons.push({ url, body: JSON.parse(init.body) });
+    return new Response('ok', { status: 202 });
+  };
+  try {
+    const env = makeEnv({ TELEMETRY_URL: 'https://hub.example/_hub/telemetry', TELEMETRY_TOKEN: 'tok' });
+    const ctx = makeCtx();
+    const r1 = await router.fetch(new Request('https://donglinli.com/cv/'), env, ctx);
+    const r2 = await router.fetch(new Request('https://donglinli.com/'), env, ctx);
+    assert.equal(r1.status, 200);
+    assert.equal(r2.status, 200);
+    assert.deepEqual(env.seen.assets, ['/cv/', '/']);
+    assert.equal(ctx.tasks.length, 2);
+    await Promise.all(ctx.tasks);
+    assert.equal(beacons.length, 2);
+    assert.deepEqual(beacons.map((b) => b.body.path), ['/cv/', '/']);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});

@@ -34,9 +34,46 @@ const ROUTES = /^\/api\/(message(\/challenge)?|feedback(\/challenge)?|wall|desk(
 const DESK_API = /^\/api\/desk(\/|$)/;
 const FEEDBACK_ROUTES = /^\/api\/feedback(\/challenge)?\/?$/;
 const OLD_PGR = /^\/(zh\/)?pgr\/?(index\.html)?$/;
+const DECOY_ROUTE = /^\/(?:d|t)\/([A-Za-z0-9_-]{8,64})$/;
+const DECOY_PATH_PREFIX = /^\/(?:d|t)(?:\/|$)/;
+const DECOY_HTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Archived Reference Note</title>
+</head>
+<body>
+  <main>
+    <h1>Archived Reference Note</h1>
+    <p>This temporary reference note has been archived and is no longer listed in the main index.</p>
+  </main>
+</body>
+</html>
+`;
 const prefersChinese = (request: Request) => /^zh\b/i.test((request.headers.get('accept-language') ?? '').trim());
 const METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']);
 const reject = (status: number) => new Response(null, { status, headers: { 'cache-control': 'no-store' } });
+const decoyNotFound = () =>
+  new Response(null, {
+    status: 404,
+    headers: {
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex, nofollow',
+    },
+  });
+const decoyOk = (method: string) =>
+  new Response(method === 'HEAD' ? null : DECOY_HTML, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex, nofollow',
+      'content-security-policy': "default-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      'x-content-type-options': 'nosniff',
+    },
+  });
 const hasCloudflareAccess = (request: Request) =>
   Boolean(request.headers.get('cf-access-authenticated-user-email')?.trim() && request.headers.get('cf-access-jwt-assertion')?.trim());
 
@@ -84,6 +121,30 @@ export function scrubError(err: unknown, status: number, secretToken?: string): 
   return msg.slice(0, 500);
 }
 
+function buildTelemetryPayload(
+  request: Request,
+  url: URL,
+  status: number,
+  started: number,
+): TelemetryEvent {
+  const cf = (request as Request & { cf?: Record<string, unknown> }).cf;
+  return {
+    host: url.hostname,
+    path: url.pathname,
+    method: request.method,
+    status,
+    latency_ms: Math.max(0, Math.round(performance.now() - started)),
+    ip: request.headers.get('cf-connecting-ip') ?? '',
+    country: cfString(cf, 'country'),
+    region: cfString(cf, 'region'),
+    city: cfString(cf, 'city'),
+    timezone: cfString(cf, 'timezone'),
+    user_agent: (request.headers.get('user-agent') ?? '').slice(0, 512),
+    referer: cleanReferer(request.headers.get('referer')),
+    ts: Math.floor(Date.now() / 1000),
+  };
+}
+
 function sendTelemetry(url: string, token: string | undefined, payload: TelemetryEvent): Promise<void> {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
@@ -99,10 +160,53 @@ function sendTelemetry(url: string, token: string | undefined, payload: Telemetr
   }
 }
 
+async function handleDecoyRequest(
+  request: Request,
+  url: URL,
+  env: Env,
+  started: number,
+): Promise<Response> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return decoyNotFound();
+  }
+  const telemetryUrl = env.TELEMETRY_URL?.trim();
+  if (!telemetryUrl) return decoyNotFound();
+
+  const payload = buildTelemetryPayload(request, url, 200, started);
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (env.TELEMETRY_TOKEN) headers.authorization = `Bearer ${env.TELEMETRY_TOKEN}`;
+
+  try {
+    const resp = await fetch(telemetryUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!resp.ok) return decoyNotFound();
+    const data = (await resp.json()) as { decoy_hit?: unknown } | null;
+    if (!data || typeof data !== 'object' || data.decoy_hit !== true) {
+      return decoyNotFound();
+    }
+    return decoyOk(request.method);
+  } catch {
+    return decoyNotFound();
+  }
+}
+
 export const router = {
   async fetch(request: Request, env: Env, ctx?: ExecutionContextLike): Promise<Response> {
     const started = performance.now();
     const url = new URL(request.url);
+    const originHost = new URL(env.ORIGIN).hostname;
+
+    if (url.hostname === originHost && DECOY_ROUTE.test(url.pathname)) {
+      return handleDecoyRequest(request, url, env, started);
+    }
+    if (DECOY_PATH_PREFIX.test(url.pathname)) {
+      return decoyNotFound();
+    }
+
     let response: Response;
     let uncaught: unknown;
     try {
@@ -117,22 +221,7 @@ export const router = {
 
     const telemetryUrl = env.TELEMETRY_URL?.trim();
     if (telemetryUrl && (uncaught !== undefined || response.status >= 500 || shouldTrackRequest(url.pathname, response))) {
-      const cf = (request as Request & { cf?: Record<string, unknown> }).cf;
-      const payload: TelemetryEvent = {
-        host: url.hostname,
-        path: url.pathname,
-        method: request.method,
-        status: response.status,
-        latency_ms: Math.max(0, Math.round(performance.now() - started)),
-        ip: request.headers.get('cf-connecting-ip') ?? '',
-        country: cfString(cf, 'country'),
-        region: cfString(cf, 'region'),
-        city: cfString(cf, 'city'),
-        timezone: cfString(cf, 'timezone'),
-        user_agent: (request.headers.get('user-agent') ?? '').slice(0, 512),
-        referer: cleanReferer(request.headers.get('referer')),
-        ts: Math.floor(Date.now() / 1000),
-      };
+      const payload = buildTelemetryPayload(request, url, response.status, started);
       if (uncaught !== undefined || response.status >= 500) {
         payload.error = scrubError(uncaught, response.status, env.TELEMETRY_TOKEN);
       }
