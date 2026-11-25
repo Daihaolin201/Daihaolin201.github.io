@@ -1,0 +1,79 @@
+---
+import ToolPage from './ToolPage.astro';
+
+interface Props { lang: 'en' | 'zh' }
+const { lang } = Astro.props;
+const zh = lang === 'zh';
+const t = zh ? {
+  title: '留言', description: '合作、问题或建议，欢迎留言。',
+  name: '称呼', optional: '可不填', contact: '联系方式', contactHint: '需要回复请留邮箱或微信，不公开显示。',
+  message: '留言内容', counter: '字',
+  publicLabel: '同意公开到留言墙（审核后显示称呼和留言，不显示联系方式）',
+  privacy: '默认不公开。',
+  send: '发送留言', sending: '正在发送……', sent: '留言已发送。', sentPublic: '留言已发送，审核后显示在留言墙。',
+  errors: { empty: '请输入留言内容。', 'too-long': '留言不能超过 2000 字。', 'bad-contact': '联系方式里不能包含 < 或 >。', rate: '发送过于频繁，请稍后再试。', busy: '今日留言已达上限。', network: '网络错误，请稍后再试。', generic: '发送失败，请稍后再试或发送邮件。' },
+  wall: '留言墙', wallIntro: '经留言人同意并审核后公开的留言。', wallEmpty: '暂无公开留言。', anonymous: '匿名访客', reply: '回复', loading: '正在加载……', wallError: '留言墙加载失败。',
+  honeypot: '请勿填写此项', noJs: '留言需启用 JavaScript，也可发送邮件。',
+} : {
+  title: 'Leave a message', description: 'Questions, collaboration ideas and feedback are welcome.',
+  name: 'Name', optional: 'optional', contact: 'Contact', contactHint: 'Add an email or other handle for a reply. Never shown publicly.',
+  message: 'Message', counter: 'characters',
+  publicLabel: 'Show on the public wall after review (name and message only, never contact details)',
+  privacy: 'Private by default.',
+  send: 'Send message', sending: 'Sending…', sent: 'Message sent.', sentPublic: 'Message sent. It will appear on the wall after review.',
+  errors: { empty: 'Enter a message.', 'too-long': 'Messages are limited to 2,000 characters.', 'bad-contact': 'The contact field cannot contain < or >.', rate: 'Too many messages. Try again later.', busy: 'Daily message limit reached.', network: 'Network error. Try again shortly.', generic: 'Message not sent. Try again later or send an email.' },
+  wall: 'Public wall', wallIntro: 'Messages shown with the writer’s consent, after review.', wallEmpty: 'No public messages yet.', anonymous: 'Anonymous visitor', reply: 'Reply', loading: 'Loading…', wallError: 'The wall failed to load.',
+  honeypot: 'Leave this field empty', noJs: 'Messaging requires JavaScript. Email also works.',
+};
+---
+<ToolPage tool="message" lang={lang} title={t.title} description={t.description}>
+  <div class="msg-board form-board" data-message-board data-lang={lang} data-copy={JSON.stringify({ sending: t.sending, sent: t.sent, sentPublic: t.sentPublic, errors: t.errors, anonymous: t.anonymous, reply: t.reply, wallEmpty: t.wallEmpty, wallError: t.wallError })}>
+    <form class="msg-form form-panel" novalidate>
+      <div class="row">
+        <div class="field">
+          <label for="msg-name">{t.name} <small>{t.optional}</small></label>
+          <input id="msg-name" name="name" maxlength="60" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="msg-contact">{t.contact} <small>{t.optional}</small></label>
+          <input id="msg-contact" name="contact" maxlength="120" autocomplete="email" inputmode="email" aria-describedby="msg-contact-hint msg-contact-error" />
+          <p class="field-error" id="msg-contact-error"></p>
+        </div>
+      </div>
+      <p class="hint" id="msg-contact-hint">{t.contactHint}</p>
+      <div class="field">
+        <label for="msg-text">{t.message}</label>
+        <textarea id="msg-text" name="message" rows="7" maxlength="2000" required aria-describedby="msg-text-error"></textarea>
+        <div class="field-foot"><p class="field-error" id="msg-text-error"></p><span class="counter" aria-hidden="true"><span data-count>0</span> / 2000 {t.counter}</span></div>
+      </div>
+      <div class="trap" aria-hidden="true"><label>{t.honeypot}<input name="website" tabindex="-1" autocomplete="off" /></label></div>
+      <label class="check"><input type="checkbox" name="public" /><span>{t.publicLabel}</span></label>
+      <p class="privacy">{t.privacy}</p>
+      <div class="actions"><button type="submit">{t.send}</button><p class="status" role="status" aria-live="polite"></p></div>
+      <noscript><p class="status">{t.noJs}</p></noscript>
+    </form>
+    <section class="wall form-panel" aria-labelledby="wall-title">
+      <h2 id="wall-title">{t.wall}</h2>
+      <p class="wall-intro">{t.wallIntro}</p>
+      <ul class="wall-list" data-wall><li class="wall-note">{t.loading}</li></ul>
+    </section>
+  </div>
+</ToolPage>
+
+<script>
+  import '../lib/messageClient';
+</script>
+
+<style>
+  .msg-board { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .wall-intro { margin: 0 0 16px; font-size: .88rem; color: var(--muted); line-height: 1.5; }
+  .wall-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .wall-list :global(li) { border: 1px solid var(--edge); border-radius: 12px; padding: 13px 15px; background: var(--sunk); }
+  .wall-list :global(.wall-note) { color: var(--muted); font-size: .92rem; }
+  .wall-list :global(.who) { display: flex; justify-content: space-between; gap: 10px; font-size: .85rem; color: var(--faint); }
+  .wall-list :global(.who strong) { color: var(--text); font-weight: 600; }
+  .wall-list :global(.text) { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font-size: .95rem; }
+  .wall-list :global(.reply) { margin: 11px 0 0; padding: 9px 12px; border-left: 3px solid var(--accent); background: var(--selected); border-radius: 0 8px 8px 0; font-size: .9rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .wall-list :global(.reply b) { display: block; font-size: .78rem; color: var(--link); margin-bottom: 3px; }
+  @media (max-width: 860px) { .msg-board { grid-template-columns: minmax(0, 1fr); } }
+</style>

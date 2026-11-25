@@ -1,0 +1,99 @@
+---
+import ToolPage from './ToolPage.astro';
+import english from '../data/en.json';
+import chinese from '../data/zh.json';
+import { FEEDBACK_CATEGORIES } from '../worker/feedback';
+import { LIMITS } from '../worker/validate';
+import { publicEmail } from '../data/publicLinks';
+
+interface Props { lang: 'en' | 'zh' }
+const { lang } = Astro.props;
+const zh = lang === 'zh';
+const page = zh ? chinese : english;
+// The role is described only in the words the home page already uses.
+type Entry = { id: string; title: string; date?: string; organisation?: string; bullets?: string[] };
+const role = page.sections.flatMap(s => s.entries as Entry[]).find(e => e.id === 'phd-representative')!;
+const max = LIMITS.feedback;
+const t = zh ? {
+  title: '博士生意见箱', description: '供本系博士生与助教提交意见。意见经汇总后在院系和 Doctoral Academy 层面反映并跟进。',
+  topic: '类别', message: '意见内容', counter: '字',
+  name: '称呼', email: '邮箱', optional: '可不填', anonHint: '不填即匿名。邮箱只用于回复。',
+  quote: '允许在向院系或 Doctoral Academy 反映时匿名引用',
+  send: '提交意见', sending: '正在提交……', sent: '意见已提交。',
+  errors: { category: '请选择类别。', empty: '请输入意见内容。', 'too-long': `意见不能超过 ${max} 字。`, 'bad-email': '邮箱格式不正确，可留空。', rate: '提交过于频繁，请稍后再试。', busy: '今日提交已达上限，请明天再试。', network: '网络错误，请稍后再试。', generic: '提交失败，请稍后再试。' },
+  honeypot: '请勿填写此项', noJs: `意见箱需启用 JavaScript，也可发送邮件至 ${publicEmail}。`, roleLink: '查看履历',
+} : {
+  title: 'PGR feedback', description: 'For EEE doctoral researchers and teaching assistants. Feedback is consolidated and raised with the department and the Doctoral Academy.',
+  topic: 'Topic', message: 'Feedback', counter: 'characters',
+  name: 'Name', email: 'Email', optional: 'optional', anonHint: 'Anonymous unless you add a name or email. Email is used only to reply.',
+  quote: 'May be quoted anonymously when raised with the department or the Doctoral Academy',
+  send: 'Send feedback', sending: 'Sending…', sent: 'Feedback sent.',
+  errors: { category: 'Choose a topic.', empty: 'Enter your feedback.', 'too-long': `Feedback is limited to ${max.toLocaleString('en-GB')} characters.`, 'bad-email': 'Enter a valid email address or leave it blank.', rate: 'Too many submissions. Try again later.', busy: 'Daily limit reached. Try again tomorrow.', network: 'Network error. Try again shortly.', generic: 'Not sent. Try again later.' },
+  honeypot: 'Leave this field empty', noJs: `The feedback form requires JavaScript. Email ${publicEmail} also works.`, roleLink: 'Full profile',
+};
+---
+<ToolPage tool="pgr" lang={lang} title={t.title} description={t.description}>
+  <div class="fb-board form-board" data-feedback-box data-lang={lang} data-copy={JSON.stringify({ sending: t.sending, sent: t.sent, errors: t.errors })}>
+    <form class="fb-form form-panel" novalidate>
+      <fieldset class="topics" data-field aria-describedby="fb-topic-error">
+        <legend>{t.topic}</legend>
+        <div class="choices">
+          {FEEDBACK_CATEGORIES.map(c => <label class="choice"><input type="radio" name="category" value={c.id} required /><span>{c[lang]}</span></label>)}
+        </div>
+        <p class="field-error" id="fb-topic-error" aria-live="polite"></p>
+      </fieldset>
+      <div class="field">
+        <label for="fb-text">{t.message}</label>
+        <textarea id="fb-text" name="message" rows="8" maxlength={max} required aria-describedby="fb-text-error"></textarea>
+        <div class="field-foot"><p class="field-error" id="fb-text-error"></p><span class="counter" aria-hidden="true"><span data-count>0</span> / {max} {t.counter}</span></div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="fb-name">{t.name} <small>{t.optional}</small></label>
+          <input id="fb-name" name="name" maxlength="60" autocomplete="name" aria-describedby="fb-anon-hint" />
+        </div>
+        <div class="field">
+          <label for="fb-email">{t.email} <small>{t.optional}</small></label>
+          <input id="fb-email" name="email" type="email" maxlength="120" autocomplete="email" inputmode="email" aria-describedby="fb-anon-hint fb-email-error" />
+          <p class="field-error" id="fb-email-error"></p>
+        </div>
+      </div>
+      <p class="hint" id="fb-anon-hint">{t.anonHint}</p>
+      <div class="trap" aria-hidden="true"><label>{t.honeypot}<input name="website" tabindex="-1" autocomplete="off" /></label></div>
+      <label class="check"><input type="checkbox" name="quote" /><span>{t.quote}</span></label>
+      <div class="actions"><button type="submit">{t.send}</button><p class="status" role="status" aria-live="polite"></p></div>
+      <noscript><p class="status">{t.noJs}</p></noscript>
+    </form>
+    <aside class="role form-panel" aria-labelledby="role-title">
+      <h2 id="role-title">{role.title}</h2>
+      <p class="org"><span>{page.name}</span><span>{role.organisation}</span><span>{role.date}</span></p>
+      {role.bullets?.map(b => <p>{b}</p>)}
+      <p class="more"><a href={(zh ? '/zh/' : '/') + '#phd-representative'}>{t.roleLink}</a></p>
+    </aside>
+  </div>
+</ToolPage>
+
+<script>
+  import '../lib/feedbackClient';
+</script>
+
+<style>
+  .fb-board { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+  fieldset { border: 0; margin: 0 0 16px; padding: 0; min-width: 0; }
+  legend { padding: 0; margin-bottom: 9px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choice { position: relative; display: inline-flex; cursor: pointer; font-weight: 400 !important; }
+  .choice input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .choice span { display: inline-flex; align-items: center; min-height: 42px; padding: 0 15px; border: 1px solid var(--edge-strong); border-radius: 99px; background: var(--sunk); font-size: .92rem; line-height: 1.3; }
+  .choice:hover span { border-color: var(--accent); }
+  .choice input:checked + span { border-color: var(--accent); background: var(--selected); color: var(--text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--accent); }
+  .choice input:checked + span::before { content: "✓"; margin-right: .4em; color: var(--link); }
+  .choice input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .topics[aria-invalid=true] .choice span { border-color: var(--bad); }
+  .topics .field-error { margin-top: 10px; }
+  .role .org { margin: 0 0 14px; font-size: .88rem; color: var(--muted); line-height: 1.55; }
+  .role .org span { display: block; }
+  .role p { margin: 0 0 12px; line-height: 1.65; font-size: .95rem; }
+  .role .more { margin: 4px 0 0; font-size: .9rem; }
+  @media (max-width: 860px) { .fb-board { grid-template-columns: minmax(0, 1fr); } }
+</style>

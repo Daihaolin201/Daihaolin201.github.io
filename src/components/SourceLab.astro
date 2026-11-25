@@ -1,0 +1,131 @@
+---
+import ToolPage from './ToolPage.astro';
+import SourceChallenge from './SourceChallenge.astro';
+interface Props { lang: 'en' | 'zh' }
+const { lang } = Astro.props;
+const zh = lang === 'zh';
+const title = zh ? '机器人寻源' : 'Robot search';
+const description = zh ? '设定信号源位置，比较三台机器人独立搜索与共享观测两种策略；另设八次测量定位挑战，与机器人比较定位误差。' : 'Place a signal source and compare independent and shared-observation search by three robots, or take the eight-reading challenge against the robot estimator.';
+---
+<ToolPage tool="lab" lang={lang} title={title} description={description}>
+  <nav class="mode-switch" aria-label={zh ? '游戏模式' : 'Game mode'}>
+    <span class="hash-target" id="search"></span><span class="hash-target" id="challenge"></span>
+    <a href="#search" data-lab-mode="search" aria-current="true">{zh ? '机器人寻源' : 'Robot search'}</a>
+    <a href="#challenge" data-lab-mode="challenge">{zh ? '你 vs 机器人' : 'You vs. robot'}</a>
+  </nav>
+  <section data-search-panel>
+  <div class="lab" data-source-lab data-lang={lang}>
+    <div class="field-panel">
+      <div class="field-heading"><h2>{zh ? '搜索区域' : 'Search field'}</h2><span class="state" data-state></span></div>
+      <svg class="map" data-map viewBox="0 0 800 496" tabindex="0" role="group" aria-label={zh ? '信号源位置。点按、拖动或用方向键移动。' : 'Source position. Click, drag or use the arrow keys to move it.'} aria-describedby="source-coordinates">
+        <defs>
+          <pattern id="small-grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#1b3444" stroke-width="1"/></pattern>
+          <pattern id="field-grid" width="160" height="160" patternUnits="userSpaceOnUse"><path d="M160 0H0V160" fill="none" stroke="#295269" stroke-width="1"/><path d="M0 4V0H4 M156 0h4v4 M0 156v4h4" fill="none" stroke="#487184" stroke-width="1"/></pattern>
+          <radialGradient id="source-glow"><stop stop-color="#44dabc" stop-opacity=".15"/><stop offset="1" stop-color="#44dabc" stop-opacity="0"/></radialGradient>
+          <clipPath id="map-clip"><rect width="800" height="496" rx="12"/></clipPath>
+        </defs>
+        <g clip-path="url(#map-clip)">
+          <rect width="800" height="496" fill="#091823"/><rect width="800" height="496" fill="url(#small-grid)"/><rect width="800" height="496" fill="url(#field-grid)"/>
+          <g data-contours fill="none" stroke="#63d0b3"><circle r="288" stroke="none" fill="url(#source-glow)"/><circle r="250" opacity=".12"/><circle r="190" opacity=".19"/><circle r="136" opacity=".25"/><circle r="86" opacity=".32"/><circle r="43" opacity=".45"/></g>
+          <g data-old-paths fill="none" stroke-width="2.1" stroke-linecap="round" stroke-dasharray="4 6" opacity=".68"></g>
+          <g data-paths fill="none" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"></g>
+          <g data-source fill="none" stroke="#a5f5d5" stroke-width="1.8"><circle r="15" stroke-dasharray="2.5 4"/><path d="M-22 0h8M14 0h8M0 -22v8M0 14v8"/><path d="M0 -6 6 0 0 6 -6 0Z" fill="#a5f5d5"/></g>
+          <g data-robots></g>
+        </g>
+      </svg>
+      <div class="map-key"><span><i class="key-dot"></i>{zh ? '机器人' : 'Robots'}</span><span><i class="key-source"></i>{zh ? '信号源' : 'Source'}</span><span data-previous hidden><i class="key-trace"></i>{zh ? '另一种策略的轨迹' : 'Other strategy'}</span></div>
+    </div>
+    <section class="control-panel" aria-labelledby="setup-title">
+      <h2 id="setup-title">{zh ? '安排一场搜索' : 'Set up a search'}</h2>
+      <p>{zh ? '点按地图选定位置。两种策略使用相同的起点和噪声序列，可以直接比较。' : 'Tap the map to place the source. Both strategies use the same starting positions and noise sequence.'}</p>
+      <div class="readout"><span>{zh ? '信号源坐标' : 'Source position'}</span><output id="source-coordinates" data-coords></output></div>
+      <div class="noise-row"><label for="lab-noise">{zh ? '测量噪声' : 'Sensor noise'}</label><select id="lab-noise" data-noise><option value="0.025">{zh ? '低' : 'Low'}</option><option selected value="0.055">{zh ? '中' : 'Medium'}</option><option value="0.11">{zh ? '高' : 'High'}</option></select></div>
+      <div class="actions"><button type="button" data-run="independent">{zh ? '独立搜索' : 'Search independently'}</button><button type="button" data-run="shared">{zh ? '共享观测' : 'Share readings'}</button></div>
+      <div class="secondary-actions"><button type="button" data-shuffle>{zh ? '随机藏点' : 'Random spot'}</button><button type="button" data-finish hidden>{zh ? '直接看结果' : 'Skip to result'}</button></div>
+      <div class="results" aria-live="polite"><h3>{zh ? '搜索结果' : 'Search results'}</h3><dl><div><dt>{zh ? '独立搜索' : 'Independent'}</dt><dd data-independent>—</dd></div><div><dt>{zh ? '共享观测' : 'Shared'}</dt><dd data-shared>—</dd></div></dl><p class="summary" data-summary></p></div>
+    </section>
+    <details class="model"><summary>{zh ? '搜索原理' : 'How the search works'}</summary><p>{zh ? '信号随距离增加而减弱，每次测量都会叠加噪声。机器人把读数与地图上各个候选位置的预测值比较，再向较可能的位置前进。独立搜索时只参考自己的读数，共享时三台机器人的读数一起参与估计。任意一台进入信号源周围 3.4 个地图单位即算找到，最多运行 100 步。' : 'The signal weakens with distance, and each measurement includes noise. A robot compares its readings with those predicted for possible source positions, then moves towards the more likely locations. Independent robots use their own readings. In shared mode they pool all three. The run ends when a robot comes within 3.4 map units of the source, or after 100 steps.'}</p></details>
+    <noscript>{zh ? '请启用 JavaScript 运行搜索模拟。' : 'Enable JavaScript to run the search simulation.'}</noscript>
+  </div>
+  </section>
+  <section data-challenge-panel hidden><SourceChallenge lang={lang} /></section>
+</ToolPage>
+<script>
+  import '../lib/sourceLabClient';
+  import '../lib/sourceChallengeClient';
+  const selectMode = () => {
+    const challenge = location.hash === '#challenge';
+    document.querySelector<HTMLElement>('[data-search-panel]')!.hidden = challenge;
+    document.querySelector<HTMLElement>('[data-challenge-panel]')!.hidden = !challenge;
+    document.querySelectorAll<HTMLElement>('[data-lab-mode]').forEach(link => {
+      if ((link.dataset.labMode === 'challenge') === challenge) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
+    const alternate = document.querySelector<HTMLAnchorElement>('#tool-language');
+    if (alternate) alternate.hash = challenge ? 'challenge' : '';
+  };
+  selectMode();
+  window.addEventListener('hashchange', selectMode);
+</script>
+<style>
+  .mode-switch { display: flex; gap: .25rem; width: fit-content; max-width: 100%; margin: 0 0 1rem; padding: .25rem; border: 1px solid var(--edge-strong); border-radius: 12px; background: var(--panel); }
+  .mode-switch { position: relative; }
+  /* the #search and #challenge targets are not links, so arriving by address does not focus a tab */
+  .hash-target { position: absolute; top: 0; left: 0; scroll-margin-top: 28vh; }
+  .mode-switch a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 1rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: .92rem; font-weight: 600; }
+  .mode-switch a:hover { color: var(--text); background: var(--hover); }
+  .mode-switch a[aria-current] { background: var(--accent); color: var(--on-accent); }
+  .lab { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(245px, 1fr); gap: 1rem; align-items: start; color: var(--text); }
+  .lab h2, .lab h3, .lab p { margin: 0; }
+  .lab h2 { font: 600 1.15rem/1.35 var(--serif); }
+  .lab h3 { font-size: .95rem; }
+  .lab p { font-size: .92rem; color: var(--muted); line-height: 1.65; }
+  .field-panel, .control-panel, .model { min-width: 0; border-radius: 18px; }
+  .field-panel, .control-panel { padding: clamp(.95rem, 2vw, 1.5rem); }
+  /* the search field is a screen: dark in both themes, like the plots and diagrams on the rest of the site */
+  .field-panel { color: #ecf6ff; border: 1px solid #294253; background: linear-gradient(145deg, #101f30, #101b2c); box-shadow: var(--panel-shadow); }
+  .control-panel, .model { border: 1px solid var(--edge); background: var(--panel); box-shadow: var(--panel-shadow); }
+  .field-heading, .map-key, .noise-row, .readout, .secondary-actions, .results dl > div { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+  .field-heading { margin-bottom: 1rem; }
+  .state { font-size: .8rem; color: #a1d4c9; display: flex; align-items: center; gap: .42rem; }
+  .state::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #70d4bd; }
+  .state[data-active=true]::before { background: #fac481; }
+  .map { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid #2d505f; cursor: crosshair; touch-action: none; outline-offset: 3px; }
+  .map:focus-visible { outline: 2px solid #9af8e2; outline-offset: 3px; }
+  .map-key { margin-top: .8rem; justify-content: flex-start; gap: .95rem; flex-wrap: wrap; color: #aebfcf; font-size: .8rem; }
+  .map-key span:not([hidden]) { display: inline-flex; align-items: center; gap: .4rem; }
+  .key-dot, .key-source, .key-trace { display: inline-block; }
+  .key-dot { width: 7px; height: 7px; border-radius: 50%; background: #73e0ef; box-shadow: 4px 0 0 #a4b1ff, 8px 0 0 #ffb486; margin-right: 8px; }
+  .key-source { width: 8px; height: 8px; transform: rotate(45deg); border: 1.5px solid #a5f5d5; }
+  .key-trace { width: 16px; border-top: 2px dashed #aebfcf; }
+  .control-panel > p { margin: .5rem 0 1.05rem; }
+  .readout, .noise-row { font-size: .88rem; color: var(--muted); margin: .6rem 0; }
+  .readout output, .results dd { font-variant-numeric: tabular-nums; color: var(--text); }
+  .readout output { font-family: var(--mono); }
+  .lab button, .lab select { font-size: .9rem; line-height: 1.25; }
+  .lab button { border: 1px solid var(--edge-strong); border-radius: 10px; cursor: pointer; background: var(--sunk); color: var(--text); padding: .68rem .7rem; min-height: 44px; font-weight: 600; }
+  .lab button:not(:disabled):hover { border-color: var(--accent); }
+  .lab button:disabled, .lab select:disabled { opacity: .55; cursor: default; }
+  .lab select { border: 1px solid var(--edge-strong); border-radius: 8px; background: var(--sunk); color: var(--text); padding: .35rem .6rem; min-height: 40px; }
+  .lab :is(button, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .actions { display: grid; gap: .5rem; margin-top: 1rem; }
+  .actions button:first-child { color: var(--on-accent); background: var(--accent); border-color: var(--accent); }
+  .actions button:first-child:not(:disabled):hover { filter: brightness(1.08); }
+  .actions button:nth-child(2) { background: var(--selected); border-color: var(--accent); }
+  .secondary-actions { justify-content: flex-start; gap: .8rem; flex-wrap: wrap; margin: .35rem 0 .65rem; }
+  .lab .secondary-actions button { padding: 0 .12rem; min-height: 40px; background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; color: var(--link); font-weight: 500; }
+  .results { padding-top: .9rem; border-top: 1px solid var(--edge); }
+  .results dl { margin: .55rem 0 0; }
+  .results dl > div { font-size: .88rem; color: var(--muted); min-height: 28px; }
+  .results dd { margin: 0; }
+  .lab .summary:not(:empty) { margin-top: .5rem; font-size: .88rem; color: var(--ok); }
+  .model { grid-column: 1/-1; padding: 0 1.2rem; }
+  .model summary { font-size: .92rem; cursor: pointer; padding: .7rem 0; width: fit-content; }
+  .model p { margin: 0 0 .9rem; max-width: 80ch; }
+  @media (max-width: 760px) {
+    .lab { grid-template-columns: 1fr; }
+    .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .field-panel, .control-panel { padding: 1rem; }
+    .control-panel > p { margin-bottom: .7rem; }
+  }
+</style>

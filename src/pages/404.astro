@@ -1,0 +1,31 @@
+---
+import ToolPage from '../components/ToolPage.astro';
+import { navTools, siteTools, toolUrl } from '../data/siteTools';
+
+// One page for both languages: the Worker serves it for any address that has no file.
+const lists = [
+  { lang: 'en', label: 'English pages', home: 'Home page' },
+  { lang: 'zh', label: '中文页面', home: '个人主页' },
+] as const;
+---
+<ToolPage lang="en" title="Page not found" description="The address may be mistyped, or the page has moved.">
+  <p class="nf-zh" lang="zh-CN">找不到这个页面。网址可能有误，或页面已移动。</p>
+  <div class="nf">
+    {lists.map(({ lang, label, home }) => (
+      <nav class="nf-list" aria-label={label} lang={lang === 'zh' ? 'zh-CN' : 'en'}>
+        <a class="nf-home" href={lang === 'zh' ? '/zh/' : '/'}>{home}</a>
+        {navTools.map(key => <a href={toolUrl(key, lang)}>{siteTools[key][lang]}</a>)}
+      </nav>
+    ))}
+  </div>
+</ToolPage>
+
+<style>
+  .nf-zh { margin: -0.9rem 0 1.8rem; color: var(--muted); font-size: 1.05rem; line-height: 1.65; text-wrap: pretty; }
+  .nf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 760px; }
+  .nf-list { display: grid; padding: 10px; border: 1px solid var(--edge); border-radius: 16px; background: var(--panel); box-shadow: var(--panel-shadow); }
+  .nf-list a { display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 10px; color: var(--text); text-decoration: none; }
+  .nf-list a:hover { background: var(--hover); color: var(--link); }
+  .nf-list .nf-home { font: 600 1.05rem/1.3 var(--serif); color: var(--link); }
+  @media (max-width: 560px) { .nf { grid-template-columns: minmax(0, 1fr); } .nf-zh { margin-top: -0.4rem; } }
+</style>

@@ -1,0 +1,130 @@
+---
+import ToolPage from './ToolPage.astro';
+import en from '../data/en.json';
+import { publicEmail } from '../data/publicLinks';
+
+interface Props { lang: 'en' | 'zh' }
+const { lang } = Astro.props;
+const zh = lang === 'zh';
+const scholar = en.quickLinks.find(({ label }) => label === 'Google Scholar')!;
+const home = zh ? '/zh/' : '/';
+const title = zh ? '李栋林的电子名片' : 'Contact card';
+const description = zh ? '曼彻斯特大学博士研究生，研究贝叶斯控制与多机器人协同寻源。' : 'PhD researcher at The University of Manchester: Bayesian control and multi-robot source seeking.';
+const cardUrl = new URL(zh ? '/zh/hi/' : '/hi/', Astro.site).href;
+---
+<ToolPage tool="hi" lang={lang} title={title} description={description}>
+  <article class="contact-card" aria-labelledby="card-name">
+    <div class="identity">
+      <img class="monogram" src="/images/dl-touch.png" width="52" height="52" alt="" />
+      <h1 id="card-name">{zh ? '李栋林' : 'Donglin Li'}</h1>
+      <p class="other-name" lang={zh ? 'en' : 'zh-CN'}>{zh ? 'Donglin (Dennis) Li' : 'Dennis · 李栋林'}</p>
+      <div class="affiliation">
+        <p>{zh ? '电气与电子工程博士研究生' : 'PhD Researcher in Electrical and Electronic Engineering'}</p>
+        <p>{zh ? '曼彻斯特大学' : 'The University of Manchester'}</p>
+      </div>
+      <p class="research">{zh ? '研究方向：贝叶斯控制与多机器人协同寻源。' : 'Research: Bayesian control and cooperative multi-robot source seeking.'}</p>
+      <div class="actions">
+        <a class="save-contact" download="Donglin-Li.vcf" href="/donglin-li.vcf">{zh ? '存入通讯录' : 'Save contact'}<span aria-hidden="true"> ↓</span></a>
+        <button class="share-card" hidden type="button" data-url={cardUrl} data-lang={lang}>{zh ? '分享名片' : 'Share card'}<span aria-hidden="true"> ↗</span></button>
+      </div>
+      <p class="share-status" aria-live="polite"></p>
+    </div>
+    <figure class="scan">
+      <img class="qr" src="/images/contact-qr.png" alt={zh ? '打开英文电子名片的二维码' : 'QR code linking to this contact card in English'} width="222" height="222" />
+      <figcaption>
+        <strong>{zh ? '扫码交换名片' : 'Scan to connect'}</strong>
+        <a href="/images/contact-qr.png" download="Donglin-Li-QR.png">{zh ? '下载二维码' : 'Download QR code'} <span aria-hidden="true">↓</span></a>
+      </figcaption>
+    </figure>
+    <div class="contact-links">
+      <a href={'mailto:' + publicEmail}>{publicEmail}</a>
+      <a href={home}>{zh ? '个人主页' : 'Academic website'}</a>
+      <a href={scholar.href}>{zh ? '谷歌学术' : 'Google Scholar'} <span aria-hidden="true">↗</span></a>
+    </div>
+  </article>
+</ToolPage>
+
+<script>
+  const share = document.querySelector<HTMLButtonElement>('.share-card');
+  const status = document.querySelector<HTMLElement>('.share-status');
+  if (share && status && (typeof navigator.share === 'function' || navigator.clipboard)) {
+    share.hidden = false;
+    share.addEventListener('click', async () => {
+      const url = share.dataset.url!;
+      const zh = share.dataset.lang === 'zh';
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ title: document.title, url });
+          return;
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        status.textContent = zh ? '已复制名片链接。' : 'Card link copied.';
+      } catch {
+        status.textContent = url;
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact-card {
+    position: relative; isolation: isolate; overflow: hidden;
+    max-width: 880px; margin: clamp(14px, 4vh, 52px) auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(24px, 4vw, 64px); row-gap: 32px; align-items: center;
+    padding: clamp(24px, 5vw, 56px); color: #edf5ff;
+    background: radial-gradient(ellipse at 94% 8%, #234050 0, transparent 52%), linear-gradient(125deg, #101c32 5%, #111d32 62%, #112f3c);
+    border: 1px solid #395266; border-radius: 24px; box-shadow: 0 20px 70px #030b1640;
+  }
+  .contact-card::before {
+    content: ''; position: absolute; z-index: -1; pointer-events: none;
+    width: 450px; height: 450px; right: -160px; top: -220px;
+    border-radius: 50%; background: repeating-radial-gradient(ellipse, transparent 0 22px, #91d1d312 23px 24px);
+  }
+  .contact-card p, .contact-card figure { margin: 0; }
+  .identity { min-width: 0; }
+  .monogram { display: block; border-radius: 12px; margin-bottom: 28px; }
+  .identity h1 { margin: 0; font: 600 clamp(3rem, 8vw, 5rem)/1.05 var(--serif); letter-spacing: -.015em; color: #f4f7ff; }
+  :lang(zh-CN) .identity h1 { letter-spacing: .04em; }
+  .identity .other-name { margin-top: 6px; color: #97d9de; font-size: 1.12rem; }
+  .affiliation { margin-top: 26px; font-size: 1rem; line-height: 1.5; color: #e4eef9; }
+  .affiliation p:first-child { font-weight: 600; text-wrap: balance; }
+  .identity .research { max-width: 46ch; margin-top: 10px; font-size: .95rem; line-height: 1.6; color: #b7cbd9; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .actions a, .actions button {
+    display: inline-flex; gap: 10px; align-items: center; justify-content: center;
+    border-radius: 10px; padding: 0 17px; min-height: 44px; font: inherit; font-size: .95rem; font-weight: 650; cursor: pointer; text-decoration: none;
+  }
+  .actions .save-contact { background: #a4eee1; border: 1px solid #a4eee1; color: #092325; }
+  .actions .share-card { background: #0c182691; border: 1px solid #4e6b7a; color: #e8f7fa; }
+  .actions button[hidden] { display: none; }
+  .actions a:hover, .actions button:hover { filter: brightness(1.12); }
+  .contact-card :is(a, button):focus-visible { outline: 3px solid #fac18e; outline-offset: 4px; }
+  .identity .share-status:not(:empty) { margin-top: 10px; font-size: .9rem; color: #bde8dc; overflow-wrap: anywhere; }
+  .scan { justify-self: center; text-align: center; }
+  .qr { width: clamp(148px, 16vw, 208px); height: auto; display: block; margin: auto; border-radius: 5px; image-rendering: pixelated; }
+  .scan figcaption { margin-top: 14px; line-height: 1.45; }
+  .scan strong { display: block; color: #e0eff3; font-size: 1rem; font-weight: 600; }
+  .scan a { display: inline-flex; align-items: center; gap: 5px; min-height: 38px; color: #b9d2da; font-size: .87rem; text-underline-offset: .22em; }
+  .contact-links { grid-column: 1/-1; border-top: 1px solid #47637385; padding-top: 15px; display: flex; align-items: center; flex-wrap: wrap; column-gap: 22px; }
+  .contact-links a { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; color: #d0edef; font-size: .93rem; text-decoration: none; }
+  .contact-links a:hover, .scan a:hover { color: #fff; text-decoration: underline; text-underline-offset: .25em; }
+  .contact-links span { color: #8ac2c6; }
+  @media (max-width: 600px) {
+    .contact-card { grid-template-columns: minmax(0, 1fr); row-gap: 25px; }
+    .monogram { width: 42px; height: 42px; margin-bottom: 20px; }
+    .scan { justify-self: stretch; display: flex; align-items: center; gap: 18px; text-align: start; border-top: 1px solid #47637385; padding-top: 24px; }
+    .qr { width: 128px; margin: 0; }
+    .scan figcaption { margin: 0; }
+    .contact-links { padding-top: 10px; gap: 0 14px; }
+  }
+  @media (max-width: 355px) {
+    .contact-card { padding: 19px; }
+    .scan { gap: 10px; }
+    .qr { width: 111px; }
+  }
+</style>

@@ -1,0 +1,400 @@
+{
+  "lang": "zh-CN",
+  "title": "李栋林（Dennis） | 研究 · 工程 · 教学",
+  "name": "李栋林（Dennis）",
+  "skip": "跳至正文",
+  "navLabel": "主导航",
+  "menu": [
+    {
+      "label": "动态",
+      "href": "#updates"
+    },
+    {
+      "label": "研究",
+      "href": "#research"
+    },
+    {
+      "label": "论文",
+      "href": "#publications"
+    },
+    {
+      "label": "项目",
+      "href": "#projects"
+    },
+    {
+      "label": "经历",
+      "href": "#employment"
+    },
+    {
+      "label": "教育",
+      "href": "#education"
+    },
+    {
+      "label": "荣誉",
+      "href": "#awards"
+    },
+    {
+      "label": "服务",
+      "href": "#service"
+    },
+    {
+      "label": "技能",
+      "href": "#skills"
+    },
+    {
+      "label": "联系",
+      "href": "#contact"
+    }
+  ],
+  "languageLink": {
+    "label": "English",
+    "lang": "en",
+    "href": "/"
+  },
+  "subtitle": "曼彻斯特大学 · 电气与电子工程博士研究生",
+  "updated": "更新于 2026 年 11 月 22 日",
+  "quickLinks": [
+    {
+      "label": "GitHub",
+      "href": "https://github.com/Daihaolin201"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/donglin-li-55424326b"
+    },
+    {
+      "label": "ORCID",
+      "href": "https://orcid.org/0009-0007-2130-4862"
+    },
+    {
+      "label": "谷歌学术",
+      "href": "https://scholar.google.com/citations?user=mBr54wEAAAAJ"
+    }
+  ],
+  "headline": "让多机器人在不确定环境中协同决策。",
+  "intro": "曼彻斯特大学电气与电子工程博士研究生，研究多机器人协同寻源的贝叶斯对偶控制，同时开发嵌入式与自主机器人系统和科研软件；在校讲授控制、机器人与数字电子方向的实验课和习题课。",
+  "lead": "研究多机器人协同寻源的贝叶斯对偶控制，同时开发嵌入式与自主机器人系统和科研软件；在校讲授控制、机器人与数字电子方向的实验课和习题课。",
+  "stats": [
+    {
+      "value": 2,
+      "label": "第一作者论文"
+    },
+    {
+      "value": 1,
+      "label": "已发表期刊论文"
+    },
+    {
+      "value": 5,
+      "label": "已审阅学术稿件"
+    }
+  ],
+  "actions": [
+    {
+      "label": "留言",
+      "href": "/zh/message/"
+    }
+  ],
+  "sections": [
+    {
+      "id": "updates",
+      "heading": "动态",
+      "entries": [
+        {
+          "id": "latest-peer-review-service",
+          "title": "学术审稿",
+          "bullets": [
+            "为 IEEE TAES、TIMC 和 JACA 2026 审阅 5 篇稿件。"
+          ],
+          "date": "2026.10"
+        },
+        {
+          "id": "latest-neurocomputing-2026",
+          "title": "期刊论文发表",
+          "bullets": [
+            "合著的大模型推理服务负载均衡综述于 2026 年 9 月 3 日在 Neurocomputing 在线发表。"
+          ],
+          "date": "2026.09"
+        },
+        {
+          "id": "latest-iai-2026",
+          "title": "IAI 2026 最佳论文奖入围",
+          "bullets": [
+            "第一作者论文获 IAI 2026 接收，并入围最佳论文奖。"
+          ],
+          "date": "2026.07"
+        },
+        {
+          "id": "latest-dtdsf",
+          "title": "博士培训支持",
+          "bullets": [
+            "获曼彻斯特大学博士培训与发展支持基金（DTDSF）资助。"
+          ],
+          "date": "2026.05"
+        },
+        {
+          "id": "latest-ccc-2026",
+          "title": "CCC 2026 论文接收",
+          "bullets": [
+            "第一作者多机器人寻源对偶控制论文获 CCC 2026 接收。"
+          ],
+          "date": "2026.04"
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "heading": "研究",
+      "entries": [
+        {
+          "id": "phd-dcee",
+          "title": "多机器人协同寻源的贝叶斯对偶控制",
+          "date": "2024.09—至今",
+          "organisation": "曼彻斯特大学 · 博士研究生",
+          "bullets": [
+            "面向未知含噪场中的多机器人协同寻源，研究贝叶斯对偶控制：每台机器人的运动同时兼顾降低源位置估计的不确定性与向估计位置收敛。",
+            "提出基于一致性均值融合与安全投影的对偶控制方法（CCC 2026），以及面向通信效率的迹加权事件触发均值融合（IAI 2026，最佳论文奖入围）。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "publications",
+      "heading": "论文",
+      "entries": [
+        {
+          "id": "ccc-2026",
+          "title": "Dual Control for Multi-Robot Source Seeking with Consensus Mean Fusion and Safety Projection",
+          "date": "2026",
+          "organisation": "第一作者",
+          "authors": "Donglin Li, Zhongguo Li, Hanbo Ma, Chunyi Cao, Zhengtao Ding",
+          "citation": "第45届中国控制会议（CCC 2026），中国长沙，2026。",
+          "status": "已接收。"
+        },
+        {
+          "id": "iai-2026",
+          "title": "Trace-Weighted Event-Triggered Mean Fusion for Efficient Multi-Robot Source Seeking",
+          "date": "2026",
+          "organisation": "第一作者",
+          "authors": "Donglin Li, Zhongguo Li, Junan Wang, Hanbo Ma, Zhengtao Ding",
+          "citation": "第8届工业人工智能国际会议（IAI 2026），中国沈阳，2026。",
+          "status": "已接收；最佳论文奖入围。"
+        },
+        {
+          "id": "neurocomputing-2026",
+          "title": "Load Balancing for Large Language Model Inference Serving: A Control and Learning Oriented Survey",
+          "date": "2026",
+          "organisation": "共同作者",
+          "authors": "Hanbo Ma, Zhongguo Li, Junan Wang, Chunyi Cao, Donglin Li, Jun Yang, Zhengtao Ding",
+          "citation": "Neurocomputing 706（2026），134973。",
+          "status": "2026 年 9 月 3 日在线发表。"
+        },
+        {
+          "id": "ifac-2026",
+          "title": "Multi-Objective Pipeline Scheduling for LLM Inference in Heterogeneous DePIN",
+          "date": "2026",
+          "organisation": "共同作者",
+          "authors": "Hanbo Ma, Zhongguo Li, Chunyi Cao, Donglin Li, Zhengtao Ding",
+          "citation": "第23届 IFAC 世界大会（IFAC WC 2026），韩国釜山，2026。",
+          "status": "已接收。"
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "heading": "项目",
+      "entries": []
+    },
+    {
+      "id": "employment",
+      "heading": "经历",
+      "entries": [
+        {
+          "id": "gta",
+          "title": "研究生助教",
+          "date": "2024.09—至今",
+          "organisation": "曼彻斯特大学",
+          "bullets": [
+            "承担控制、机器人与数字电子方向六门本科及研究生课程的实验与习题课教学，指导控制器实现、机器人运动学和电路设计。",
+            "负责作业与考试评阅及书面反馈，为毕业设计展示提供技术评议；参与 2026 年夏季阅卷与课程开发，并获聘担任 2026/27 学年 EEEN11101 课程助教。"
+          ]
+        },
+        {
+          "id": "process-control",
+          "title": "客座讲师与实验设计者（过程控制）",
+          "date": "2025.06—2025.12",
+          "organisation": "曼彻斯特大学",
+          "bullets": [
+            "设计并搭建硕士过程控制实验平台：PLC 执行 PID 控制，经 OPC 与 MATLAB/Simulink 互联，实现实时监控与分析。",
+            "承担相关控制理论的客座讲授，并主持实验教学。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "heading": "教育",
+      "entries": [
+        {
+          "id": "phd",
+          "title": "电气与电子工程博士（在读）",
+          "date": "2024.09—至今",
+          "organisation": "曼彻斯特大学"
+        },
+        {
+          "id": "beng",
+          "title": "电子工程荣誉学士（一等荣誉学位）",
+          "date": "2021.09—2024.06",
+          "organisation": "曼彻斯特大学"
+        }
+      ]
+    },
+    {
+      "id": "awards",
+      "heading": "荣誉",
+      "entries": [
+        {
+          "id": "iai-finalist",
+          "title": "第8届工业人工智能国际会议（IAI 2026）最佳论文奖入围",
+          "date": "2026"
+        },
+        {
+          "id": "hackabot-third",
+          "title": "Hack-a-Bot 机器人挑战赛三等奖",
+          "date": "2026",
+          "organisation": "曼彻斯特大学 RoboSoc"
+        },
+        {
+          "id": "dtdsf",
+          "title": "博士培训与发展支持基金（DTDSF）",
+          "date": "2026",
+          "organisation": "曼彻斯特大学"
+        },
+        {
+          "id": "poster-first",
+          "title": "电气与电子工程研究生研究会议海报一等奖",
+          "date": "2025",
+          "organisation": "曼彻斯特大学"
+        },
+        {
+          "id": "hackabot-first",
+          "title": "Hack-a-Bot 机器人挑战赛一等奖",
+          "date": "2025",
+          "organisation": "曼彻斯特大学 RoboSoc 与 Sony"
+        },
+        {
+          "id": "puzzlethon-second",
+          "title": "NVIDIA PuzzleThon 二等奖",
+          "date": "2023"
+        },
+        {
+          "id": "buggy-third",
+          "title": "ESP 自主循迹小车开发三等奖",
+          "date": "2023"
+        }
+      ]
+    },
+    {
+      "id": "service",
+      "heading": "服务",
+      "entries": [
+        {
+          "id": "peer-review-service",
+          "title": "学术论文审稿人",
+          "date": "2026.05—2026.10",
+          "organisation": "TIMC · IEEE TAES · JACA 2026",
+          "bullets": [
+            "为 IEEE Transactions on Aerospace and Electronic Systems 和 TIMC 各审稿 1 篇，为 JACA 2026 审稿 3 篇。"
+          ]
+        },
+        {
+          "id": "phd-representative",
+          "title": "EEE 博士生代表",
+          "date": "2024.10—至今",
+          "organisation": "曼彻斯特大学电气与电子工程系",
+          "bullets": [
+            "2025/26 学年牵头本系博士生代表工作，汇总博士生与助教的意见，在院系和 Doctoral Academy 层面代为反映并跟进。"
+          ]
+        },
+        {
+          "id": "student-ambassador",
+          "title": "学生大使兼博士生大使（PGR Ambassador）",
+          "date": "2024.10—至今",
+          "organisation": "曼彻斯特大学",
+          "bullets": [
+            "在开放日和外展活动中代表学校介绍工程专业与校园生活，并在实验室主持机器人项目演示。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "heading": "技能",
+      "entries": [
+        {
+          "id": "skill-0",
+          "title": "研究方法",
+          "bullets": [
+            "贝叶斯估计与对偶控制；实验设计；蒙特卡洛仿真与消融实验；统计分析与优化；文献综述、学术写作和同行评审。"
+          ]
+        },
+        {
+          "id": "skill-1",
+          "title": "编程",
+          "bullets": [
+            "C/C++；Python（NumPy、SciPy、pandas、Matplotlib）；MATLAB；R；JavaScript/TypeScript；SQL；PIC18 汇编；PLC 梯形图/SCL；Bash；HTML/CSS；Linux。"
+          ]
+        },
+        {
+          "id": "skill-2",
+          "title": "控制与机器人",
+          "bullets": [
+            "PID、分布式与一致性控制、编队与主动源搜索；A* 和 Pure Pursuit；多机器人协同；ROS、OpenCV/ArUco 视觉定位。"
+          ]
+        },
+        {
+          "id": "skill-3",
+          "title": "建模与仿真",
+          "bullets": [
+            "MATLAB/Simulink；LabVIEW/NI myDAQ；PLECS；Multisim；Tanner T-Spice/SPICE；ANSYS。"
+          ]
+        },
+        {
+          "id": "skill-4",
+          "title": "硬件与嵌入式",
+          "bullets": [
+            "STM32/Mbed、PIC18F8722、ESP32/ESP8266、Arduino、Xilinx FPGA/VHDL；PCB 原型；裸机与 RTOS 固件。"
+          ]
+        },
+        {
+          "id": "skill-9",
+          "title": "教学与评价",
+          "bullets": [
+            "实验与习题课教学；控制和机器人实验演示；作业与考试评阅；学生项目技术反馈。"
+          ]
+        }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "联系",
+    "profiles": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Daihaolin201"
+      },
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/donglin-li-55424326b"
+      },
+      {
+        "label": "ORCID",
+        "href": "https://orcid.org/0009-0007-2130-4862"
+      },
+      {
+        "label": "谷歌学术",
+        "href": "https://scholar.google.com/citations?user=mBr54wEAAAAJ"
+      }
+    ]
+  },
+  "emailLabel": "邮件"
+}

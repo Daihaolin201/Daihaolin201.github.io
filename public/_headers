@@ -1,0 +1,27 @@
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+/publications.bib
+  Content-Type: application/x-bibtex; charset=utf-8
+
+/donglin-li.vcf
+  Content-Type: text/vcard; charset=utf-8
+
+/message/*
+  Content-Security-Policy: frame-ancestors 'none'
+
+/zh/message/*
+  Content-Security-Policy: frame-ancestors 'none'
+
+/pgr/*
+  Content-Security-Policy: frame-ancestors 'none'
+  Referrer-Policy: same-origin
+
+/zh/pgr/*
+  Content-Security-Policy: frame-ancestors 'none'
+  Referrer-Policy: same-origin
+

@@ -1,0 +1,9 @@
+{
+  // Local test config: same Worker, but without the custom-domain routes, which make `wrangler dev` rewrite the Origin header.
+  "name": "donglin-li-homepage",
+  "main": "../src/worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "../dist", "binding": "ASSETS", "run_worker_first": ["/api/*"], "not_found_handling": "404-page" },
+  "durable_objects": { "bindings": [{ "name": "HUB", "class_name": "Hub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Hub"] }]
+}

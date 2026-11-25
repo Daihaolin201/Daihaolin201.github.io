@@ -1,0 +1,80 @@
+---
+import { publicationCitations } from '../data/publicationCitations';
+import { doiOf, plainCitation, type PaperFields } from '../lib/citation';
+
+interface Props { id: string; lang: string; paper: PaperFields }
+const { id, lang, paper } = Astro.props;
+const zh = lang.startsWith('zh');
+const bibtex = publicationCitations[id];
+const doi = doiOf(bibtex);
+const text = plainCitation(paper, zh ? 'zh' : 'en', doi);
+const fieldId = 'cite-' + id;
+---
+<div class="cite-action" data-cite-action
+  data-success-text={zh ? '引用已复制' : 'Citation copied'}
+  data-success-bibtex={zh ? 'BibTeX 已复制' : 'BibTeX copied'}
+  data-manual={zh ? '无法自动复制，已选中文本。' : 'Copy failed. The text is selected; copy it manually.'}>
+  <div class="cite-row">
+    <button type="button" hidden data-copy="text" aria-controls={fieldId + '-text'}>
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="7" y="6" width="9" height="11" rx="1.6"></rect><path d="M12.5 4V3.8A1.8 1.8 0 0 0 10.7 2H5.8A1.8 1.8 0 0 0 4 3.8v7.4A1.8 1.8 0 0 0 5.8 13"></path></svg>
+      {zh ? '复制引用' : 'Copy citation'}
+    </button>
+    {bibtex && <button type="button" hidden data-copy="bibtex" aria-controls={fieldId + '-bibtex'}>
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 5 3 10l4 5M13 5l4 5-4 5"></path></svg>
+      {zh ? '复制 BibTeX' : 'Copy BibTeX'}
+    </button>}
+    {doi && <a class="doi" href={'https://doi.org/' + doi}>DOI {doi}</a>}
+    <span aria-live="polite" role="status"></span>
+  </div>
+  <details>
+    <summary>{zh ? '查看引用文本' : 'View citation text'}</summary>
+    <label for={fieldId + '-text'}>{zh ? '引用' : 'Citation'}</label>
+    <textarea id={fieldId + '-text'} data-format="text" readonly spellcheck="false" rows="3">{text}</textarea>
+    {bibtex && <><label for={fieldId + '-bibtex'}>BibTeX</label>
+    <textarea id={fieldId + '-bibtex'} data-format="bibtex" readonly spellcheck="false" rows="8">{bibtex}</textarea></>}
+  </details>
+</div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cite-action]').forEach(action => {
+    const details = action.querySelector('details')!;
+    const status = action.querySelector('[role="status"]')!;
+    let timer: number | undefined;
+    details.hidden = true;
+    action.querySelectorAll<HTMLButtonElement>('button[data-copy]').forEach(button => {
+      button.hidden = false;
+      const format = button.dataset.copy!;
+      const field = action.querySelector<HTMLTextAreaElement>(`textarea[data-format="${format}"]`)!;
+      button.addEventListener('click', async () => {
+        clearTimeout(timer);
+        try {
+          await navigator.clipboard.writeText(field.value);
+          details.open = false;
+          details.hidden = true;
+          status.textContent = format === 'bibtex' ? action.dataset.successBibtex! : action.dataset.successText!;
+          timer = window.setTimeout(() => { status.textContent = ''; }, 4000);
+        } catch {
+          details.hidden = false;
+          details.open = true;
+          field.focus();
+          field.select();
+          status.textContent = action.dataset.manual!;
+        }
+      });
+    });
+  });
+</script>
+<style>
+  .cite-action { margin-top: .4rem; }
+  .cite-row { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem 1.1rem; }
+  button, summary { font: inherit; font-size: .84rem; cursor: pointer; }
+  button { display: inline-flex; align-items: center; gap: .4rem; min-height: 36px; padding: .2rem 0; border: 0; border-radius: 4px; background: transparent; color: var(--muted); }
+  button[hidden], details[hidden] { display: none; }
+  button:hover, summary:hover { color: var(--accent); }
+  .doi { font-size: .84rem; font-variant-numeric: tabular-nums; min-height: 36px; display: inline-flex; align-items: center; }
+  summary { color: var(--muted); }
+  [role="status"] { color: var(--ink-teal); font-size: .84rem; font-weight: 600; }
+  [role="status"]:empty { display: none; }
+  details { margin-block: .35rem; }
+  label { display: block; margin-top: .6rem; font-size: .8rem; font-weight: 600; color: var(--muted); }
+  textarea { display: block; box-sizing: border-box; width: 100%; margin-top: .3rem; resize: vertical; padding: .65rem; line-height: 1.5; font-size: .82rem; color: var(--text); background: var(--panel-strong); border: 1px solid var(--edge-strong); border-radius: 8px; font-family: var(--mono); }
+</style>

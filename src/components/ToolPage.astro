@@ -1,0 +1,216 @@
+---
+import { navShort, navTools, siteTools, toolUrl, type Language, type Tool } from '../data/siteTools';
+
+/** Shared shell for the tool pages. Without a `tool` (the 404 page) there is no canonical address, menu or language switch. */
+interface Props { lang: Language; tool?: Tool; title: string; description: string }
+const { lang, tool, title, description } = Astro.props;
+const chinese = lang === 'zh';
+const other = chinese ? 'en' : 'zh';
+// pages on their own subdomain link back to the main site directly
+const site = tool === 'pgr' ? 'https://donglinli.com' : '';
+const onSite = (href: string) => href.startsWith('/') ? site + href : href;
+const href = tool && toolUrl(tool, lang);
+const pageTitle = title + ' · Donglin Li';
+const showNav = tool && tool !== 'pgr';
+const shareImage = new URL('/images/dl-share-v1.jpg', Astro.site).href;
+---
+<!doctype html>
+<html lang={chinese ? 'zh-CN' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>try{var t=localStorage.getItem("dl-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+    <meta name="theme-color" content="#091324" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {tool ? <>
+      <link rel="canonical" href={new URL(href!, Astro.site)} />
+      <link rel="alternate" hreflang="en" href={new URL(toolUrl(tool, 'en'), Astro.site)} />
+      <link rel="alternate" hreflang="zh-CN" href={new URL(toolUrl(tool, 'zh'), Astro.site)} />
+      <link rel="alternate" hreflang="x-default" href={new URL(toolUrl(tool, 'en'), Astro.site)} />
+    </> : <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/images/dl-touch.png" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {tool && <meta property="og:url" content={new URL(href!, Astro.site)} />}
+    <meta property="og:site_name" content={chinese ? '李栋林（Dennis）' : 'Donglin (Dennis) Li'} />
+    <meta property="og:locale" content={chinese ? 'zh_CN' : 'en_GB'} />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={shareImage} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#tool-main">{chinese ? '跳至内容' : 'Skip to content'}</a>
+    <header class="mast">
+      <div class="frame mast-inner">
+        <a class="identity" href={onSite(chinese ? '/zh/' : '/')}>
+          <img src="/images/dl-touch.png" width="34" height="34" alt="" />
+          <span>{chinese ? '李栋林' : 'Donglin Li'}</span>
+        </a>
+        {showNav && <nav aria-label={chinese ? '网站导航' : 'Site navigation'}>
+          {navTools.map(key => {
+            const short = chinese ? undefined : navShort[key];
+            return <a href={onSite(toolUrl(key, lang))} aria-current={key === tool ? 'page' : undefined} class:list={{ 'has-short': short }}>
+              <span class="full">{siteTools[key][lang]}</span>{short && <span class="short" aria-hidden="true">{short}</span>}
+            </a>;
+          })}
+        </nav>}
+        <button type="button" class="theme-btn" data-theme-toggle aria-label={chinese ? '切换深色和浅色' : 'Switch between dark and light'} data-label-dark={chinese ? '深色' : 'Dark'} data-label-light={chinese ? '浅色' : 'Light'}><svg class="i-moon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M15.5 12.8A6.5 6.5 0 0 1 7.2 4.5a6.5 6.5 0 1 0 8.3 8.3Z" fill="currentColor"/></svg><svg class="i-sun" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="currentColor"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        {tool && <a class="language" id="tool-language" href={toolUrl(tool, other)} lang={chinese ? 'en' : 'zh-CN'} hreflang={chinese ? 'en' : 'zh-CN'}>{chinese ? 'English' : '中文'}</a>}
+      </div>
+    </header>
+    <main class="frame tool-main" id="tool-main">
+      {tool !== 'hi' && tool !== 'cv' && <header class="intro">
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </header>}
+      <slot />
+    </main>
+    <script>import '../lib/theme';</script>
+    {tool && tool !== 'hi' && <script is:inline>
+      const controlLocaleLink = document.getElementById('tool-language');
+      // a link that picks the language by ?lang= (subdomain pages) keeps its own value
+      const targetLang = new URL(controlLocaleLink.href).searchParams.get('lang');
+      function updateLocaleLink() {
+        const next = new URL(controlLocaleLink.href);
+        next.search = location.search;
+        if (targetLang) next.searchParams.set('lang', targetLang);
+        next.hash = location.hash;
+        controlLocaleLink.href = next.href;
+      }
+      updateLocaleLink();
+      controlLocaleLink.addEventListener('focus', updateLocaleLink);
+      controlLocaleLink.addEventListener('pointerdown', updateLocaleLink);
+      controlLocaleLink.addEventListener('click', updateLocaleLink);
+      window.addEventListener('hashchange', updateLocaleLink);
+      window.addEventListener('popstate', updateLocaleLink);
+    </script>}
+  </body>
+</html>
+<style is:global>
+  /* Same palette and type as the home page (HomePage.astro). Panels follow the theme; plots, maps and the contact card stay dark as screens. */
+  :root {
+    color-scheme: dark;
+    --bg: #060b18; --bg2: #0a1226; --glow: #12304a;
+    --text: #eaf0ff; --muted: #a6b6d6; --faint: #8797b8;
+    --accent: #22d3ee; --link: #67e8f9; --on-accent: #04121c;
+    --panel: linear-gradient(155deg, #111f38, #0c172a); --panel-shadow: 0 14px 40px rgba(2, 6, 18, .35);
+    --sunk: #0a1326; --edge: #24354f; --edge-strong: #36506c; --hover: rgba(125, 178, 255, .08); --selected: rgba(34, 211, 238, .12);
+    --ok: #8fe3b5; --ok-bg: rgba(143, 227, 181, .1); --bad: #ffab8f; --bad-bg: rgba(255, 155, 138, .1); --warm: #f6dfaf;
+    --mast: rgba(9, 16, 32, .86);
+    --serif: Charter, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", "Noto Serif SC", STSong, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-family: var(--sans);
+    color: var(--text);
+    background: var(--bg);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #eef3fb; --bg2: #e4ecf8; --glow: #d6e9f5;
+    --text: #0f1c33; --muted: #46597a; --faint: #5d6f90;
+    --accent: #0e7490; --link: #0e7490; --on-accent: #ffffff;
+    --panel: rgba(255, 255, 255, .84); --panel-shadow: 0 14px 40px rgba(30, 60, 110, .09);
+    --sunk: #ffffff; --edge: rgba(30, 64, 120, .14); --edge-strong: rgba(30, 64, 120, .3); --hover: rgba(14, 116, 144, .06); --selected: rgba(14, 116, 144, .1);
+    --ok: #17714a; --ok-bg: #e5f5ec; --bad: #b3361d; --bad-bg: #fcebe6; --warm: #8a5300;
+    --mast: rgba(255, 255, 255, .84);
+  }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #eef3fb; --bg2: #e4ecf8; --glow: #d6e9f5;
+    --text: #0f1c33; --muted: #46597a; --faint: #5d6f90;
+    --accent: #0e7490; --link: #0e7490; --on-accent: #ffffff;
+    --panel: rgba(255, 255, 255, .84); --panel-shadow: 0 14px 40px rgba(30, 60, 110, .09);
+    --sunk: #ffffff; --edge: rgba(30, 64, 120, .14); --edge-strong: rgba(30, 64, 120, .3); --hover: rgba(14, 116, 144, .06); --selected: rgba(14, 116, 144, .1);
+    --ok: #17714a; --ok-bg: #e5f5ec; --bad: #b3361d; --bad-bg: #fcebe6; --warm: #8a5300;
+    --mast: rgba(255, 255, 255, .84);
+  } }
+  :lang(zh-CN) { --serif: "Songti SC", "Noto Serif SC", STSong, "Source Han Serif SC", serif; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased; background: radial-gradient(ellipse at 13% -15%, var(--glow) 0, transparent 48rem), linear-gradient(180deg, var(--bg), var(--bg2)) fixed; }
+  button, input, select, textarea { font: inherit; }
+  a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .frame { width: min(1140px, calc(100% - 3rem)); margin-inline: auto; }
+  .mast { border-bottom: 1px solid var(--edge); background: var(--mast); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .mast-inner { display: flex; align-items: center; gap: .6rem; min-height: 68px; }
+  .mast a { text-decoration: none; color: var(--muted); }
+  .mast .identity { display: inline-flex; align-items: center; gap: .65rem; color: var(--text); font: 600 1.05rem/1 var(--serif); margin-right: auto; white-space: nowrap; }
+  .identity img { border-radius: 9px; }
+  .mast nav { display: flex; align-self: stretch; gap: 1.35rem; margin-right: .75rem; }
+  .mast nav a { display: inline-flex; align-items: center; padding: .6rem .1rem; font-size: .9rem; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .mast nav a[aria-current] { color: var(--text); border-color: var(--accent); }
+  .mast nav .short { display: none; }
+  .mast a:hover { color: var(--text); }
+  .theme-btn, .mast .language { display: inline-grid; place-items: center; min-width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--edge-strong); background: transparent; color: var(--text); }
+  .theme-btn { cursor: pointer; }
+  .mast .language { padding: 0 .8rem; font-size: .85rem; font-weight: 500; }
+  .theme-btn:hover, .mast .language:hover { border-color: var(--accent); }
+  .theme-btn .i-sun { display: none; }
+  :root[data-theme="light"] .theme-btn .i-sun { display: block; }
+  :root[data-theme="light"] .theme-btn .i-moon { display: none; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .theme-btn .i-sun { display: block; } :root:not([data-theme="dark"]) .theme-btn .i-moon { display: none; } }
+  .tool-main { padding-block: clamp(1.75rem, 4vw, 3.5rem) 3.75rem; }
+  .intro { margin: 0 0 1.6rem; }
+  .intro h1 { font: 600 clamp(2rem, 4.4vw, 3.1rem)/1.1 var(--serif); letter-spacing: -.01em; margin: 0 0 .6rem; text-wrap: balance; }
+  :lang(zh-CN) .intro h1 { letter-spacing: .02em; }
+  .intro p { font-size: clamp(1rem, 1.6vw, 1.1rem); line-height: 1.65; color: var(--muted); margin: 0; max-width: 68ch; text-wrap: pretty; }
+  /* Form pages (message board and PGR feedback box) share these rules. */
+  .form-board { display: grid; gap: 20px; align-items: start; color: var(--text); }
+  .form-panel { border: 1px solid var(--edge); border-radius: 16px; background: var(--panel); box-shadow: var(--panel-shadow); padding: clamp(18px, 2.6vw, 28px); min-width: 0; }
+  .form-board h2 { margin: 0 0 6px; font: 600 1.25rem/1.3 var(--serif); }
+  .form-board .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-board .field { margin-bottom: 14px; min-width: 0; }
+  .form-board .row .field { margin-bottom: 0; }
+  .form-board label, .form-board legend { display: block; font-size: .92rem; font-weight: 600; color: var(--text); }
+  .form-board label small { color: var(--faint); font-weight: 400; margin-left: .35em; }
+  .form-board input:not([type=checkbox]):not([type=radio]), .form-board textarea { display: block; width: 100%; margin-top: 7px; min-height: 46px; border: 1px solid var(--edge-strong); border-radius: 10px; padding: 10px 12px; background: var(--sunk); color: var(--text); line-height: 1.55; }
+  .form-board textarea { resize: vertical; min-height: 170px; }
+  .form-board input:focus, .form-board textarea:focus { border-color: var(--accent); outline: 2px solid var(--selected); outline-offset: 0; }
+  .form-board [aria-invalid=true] { border-color: var(--bad) !important; }
+  .form-board .field-foot { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 6px; }
+  .form-board .field-error { margin: 6px 0 0; color: var(--bad); font-size: .86rem; font-weight: 600; line-height: 1.45; }
+  .form-board .field-foot .field-error { margin: 0; }
+  .form-board .field-error:empty { display: none; }
+  .form-board .field-error::before, .form-board .status[data-kind=error]::before { content: "!"; display: inline-grid; place-items: center; width: 1.15em; height: 1.15em; margin-right: .4em; border-radius: 50%; background: var(--bad); color: var(--sunk); font-size: .8em; font-weight: 800; vertical-align: .1em; }
+  .form-board .hint, .form-board .privacy { font-size: .85rem; line-height: 1.55; color: var(--muted); margin: 8px 0 14px; }
+  .form-board .counter { margin-left: auto; font-size: .78rem; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .form-board .check { display: flex; gap: 10px; align-items: flex-start; line-height: 1.5; cursor: pointer; font-weight: 400; }
+  .form-board .check input { margin-top: .2rem; accent-color: var(--accent); width: 1.1rem; height: 1.1rem; flex: none; }
+  .form-board .trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .form-board .actions { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 18px; }
+  .form-board button[type=submit] { min-height: 46px; padding: 0 24px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 700; cursor: pointer; }
+  .form-board button[type=submit]:hover { filter: brightness(1.08); }
+  .form-board button[type=submit][disabled] { opacity: .6; cursor: progress; }
+  .form-board .status { margin: 0; font-size: .92rem; line-height: 1.5; color: var(--muted); }
+  .form-board .status:empty { display: none; }
+  .form-board .status[data-kind] { padding: 8px 12px; border-radius: 9px; font-weight: 600; }
+  .form-board .status[data-kind=ok] { color: var(--ok); background: var(--ok-bg); }
+  .form-board .status[data-kind=ok]::before { content: "✓"; margin-right: .45em; }
+  .form-board .status[data-kind=error] { color: var(--bad); background: var(--bad-bg); }
+  @media (max-width: 520px) { .form-board .row { grid-template-columns: 1fr; } }
+  /* A screen (plot, map, result board) keeps the dark palette in both themes. */
+  .screen {
+    color-scheme: dark; color: var(--text);
+    --text: #eaf0ff; --muted: #a6b6d6; --faint: #8797b8; --accent: #22d3ee; --link: #67e8f9; --on-accent: #04121c;
+    --panel: linear-gradient(155deg, #111f38, #0c172a); --sunk: #0a1326; --edge: #24354f; --edge-strong: #36506c;
+    --ok: #8fe3b5; --ok-bg: rgba(143, 227, 181, .1); --bad: #ffab8f; --bad-bg: rgba(255, 155, 138, .1); --warm: #f6dfaf;
+  }
+  .skip { position: absolute; transform: translateY(-160%); background: var(--text); color: var(--bg); padding: .5rem .75rem; z-index: 5; }
+  .skip:focus { transform: none; }
+  @media (max-width: 640px) {
+    .frame { width: min(100% - 1.5rem, 1140px); }
+    .mast-inner { flex-wrap: wrap; gap: 0 .5rem; padding-top: .6rem; min-height: 0; }
+    .mast nav { order: 3; width: 100%; gap: 1.1rem; margin: .25rem 0 0; overflow-x: auto; scrollbar-width: none; }
+    .mast nav a { min-height: 44px; font-size: .88rem; }
+    .mast nav .has-short .full { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .mast nav .has-short .short { display: inline; }
+    .intro { margin-bottom: 1.15rem; }
+  }
+</style>

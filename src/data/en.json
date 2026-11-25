@@ -1,0 +1,397 @@
+{
+  "lang": "en",
+  "title": "Donglin (Dennis) Li | Research · Engineering · Teaching",
+  "name": "Donglin (Dennis) Li",
+  "skip": "Skip to content",
+  "navLabel": "Primary navigation",
+  "menu": [
+    {
+      "label": "News",
+      "href": "#updates"
+    },
+    {
+      "label": "Research",
+      "href": "#research"
+    },
+    {
+      "label": "Publications",
+      "href": "#publications"
+    },
+    {
+      "label": "Projects",
+      "href": "#projects"
+    },
+    {
+      "label": "Experience",
+      "href": "#employment"
+    },
+    {
+      "label": "Education",
+      "href": "#education"
+    },
+    {
+      "label": "Awards",
+      "href": "#awards"
+    },
+    {
+      "label": "Service",
+      "href": "#service"
+    },
+    {
+      "label": "Skills",
+      "href": "#skills"
+    },
+    {
+      "label": "Contact",
+      "href": "#contact"
+    }
+  ],
+  "languageLink": {
+    "label": "中文",
+    "lang": "zh-CN",
+    "href": "/zh/"
+  },
+  "subtitle": "PhD researcher · Control, Robotics & AI · The University of Manchester",
+  "updated": "Updated 22 November 2026",
+  "quickLinks": [
+    {
+      "label": "GitHub",
+      "href": "https://github.com/Daihaolin201"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/donglin-li-55424326b"
+    },
+    {
+      "label": "ORCID",
+      "href": "https://orcid.org/0009-0007-2130-4862"
+    },
+    {
+      "label": "Google Scholar",
+      "href": "https://scholar.google.com/citations?user=mBr54wEAAAAJ"
+    }
+  ],
+  "headline": "Bayesian control for cooperative robots.",
+  "intro": "PhD researcher in Electrical and Electronic Engineering at The University of Manchester, developing Bayesian dual control for multi-robot source seeking, with hands-on work in embedded and autonomous robots and research software. Teaches laboratory and tutorial classes in control, robotics and digital electronics.",
+  "lead": "Develops Bayesian dual control for multi-robot source seeking, with hands-on work in embedded and autonomous robots and research software. Teaches laboratory and tutorial classes in control, robotics and digital electronics.",
+  "stats": [
+    {
+      "value": 2,
+      "label": "First-author papers"
+    },
+    {
+      "value": 1,
+      "label": "Journal paper published"
+    },
+    {
+      "value": 5,
+      "label": "Manuscripts reviewed"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Leave a message",
+      "href": "/message/"
+    }
+  ],
+  "sections": [
+    {
+      "id": "updates",
+      "heading": "News",
+      "entries": [
+        {
+          "id": "latest-peer-review-service",
+          "title": "Peer reviewing",
+          "bullets": [
+            "Reviewed five manuscripts for IEEE TAES, TIMC and JACA 2026."
+          ],
+          "date": "Oct. 2026"
+        },
+        {
+          "id": "latest-neurocomputing-2026",
+          "title": "Journal article published",
+          "bullets": [
+            "Co-authored survey on load balancing for LLM inference serving published online in Neurocomputing on 3 September 2026."
+          ],
+          "date": "Sept. 2026"
+        },
+        {
+          "id": "latest-iai-2026",
+          "title": "IAI 2026: Best Paper Award finalist",
+          "bullets": [
+            "First-author paper accepted at IAI 2026 and shortlisted for the Best Paper Award."
+          ],
+          "date": "Jul. 2026"
+        },
+        {
+          "id": "latest-dtdsf",
+          "title": "Doctoral training support",
+          "bullets": [
+            "Awarded support through Manchester’s Doctoral Training and Development Support Fund."
+          ],
+          "date": "May 2026"
+        },
+        {
+          "id": "latest-ccc-2026",
+          "title": "CCC 2026: paper accepted",
+          "bullets": [
+            "First-author paper on dual control for multi-robot source seeking accepted at CCC 2026."
+          ],
+          "date": "Apr. 2026"
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "heading": "Research",
+      "entries": [
+        {
+          "id": "phd-dcee",
+          "title": "Bayesian Dual Control for Cooperative Multi-Robot Source Seeking",
+          "date": "Sept. 2024 – Present",
+          "organisation": "The University of Manchester · PhD Researcher",
+          "bullets": [
+            "Bayesian dual control for robot teams localising an unknown source in a noisy field: each robot’s motion balances reducing uncertainty in the source estimate against converging on it.",
+            "Contributions include dual control with consensus mean fusion and a safety projection (CCC 2026), and trace-weighted, event-triggered fusion for communication-efficient source seeking (IAI 2026, Best Paper Award finalist)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "publications",
+      "heading": "Publications",
+      "entries": [
+        {
+          "id": "ccc-2026",
+          "title": "Dual Control for Multi-Robot Source Seeking with Consensus Mean Fusion and Safety Projection",
+          "organisation": "First author",
+          "authors": "D. Li, Z. Li, H. Ma, C. Cao, Z. Ding",
+          "citation": "45th Chinese Control Conference (CCC 2026), Changsha, China.",
+          "status": "Accepted."
+        },
+        {
+          "id": "iai-2026",
+          "title": "Trace-Weighted Event-Triggered Mean Fusion for Efficient Multi-Robot Source Seeking",
+          "organisation": "First author",
+          "authors": "D. Li, Z. Li, J. Wang, H. Ma, Z. Ding",
+          "citation": "8th International Conference on Industrial Artificial Intelligence (IAI 2026), Shenyang, China.",
+          "status": "Accepted. Best Paper Award Finalist."
+        },
+        {
+          "id": "neurocomputing-2026",
+          "title": "Load Balancing for Large Language Model Inference Serving: A Control and Learning Oriented Survey",
+          "organisation": "Co-author",
+          "authors": "H. Ma, Z. Li, J. Wang, C. Cao, D. Li, J. Yang, Z. Ding",
+          "citation": "Neurocomputing, vol. 706, art. 134973, 2026.",
+          "status": "Published online 3 September 2026."
+        },
+        {
+          "id": "ifac-2026",
+          "title": "Multi-Objective Pipeline Scheduling for LLM Inference in Heterogeneous DePIN",
+          "organisation": "Co-author",
+          "authors": "H. Ma, Z. Li, C. Cao, D. Li, Z. Ding",
+          "citation": "23rd IFAC World Congress (IFAC WC 2026), Busan, Korea.",
+          "status": "Accepted."
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "heading": "Projects",
+      "entries": []
+    },
+    {
+      "id": "employment",
+      "heading": "Experience",
+      "entries": [
+        {
+          "id": "gta",
+          "title": "Graduate Teaching Assistant",
+          "date": "Sept. 2024 – Present",
+          "organisation": "The University of Manchester",
+          "bullets": [
+            "Teaches laboratory and tutorial classes across six undergraduate and postgraduate courses in control, robotics and digital electronics, coaching students through controller implementation, robot kinematics and circuit design.",
+            "Marks coursework and examinations with written feedback and advises on final-year project demonstrations; contributed to summer 2026 marking and course development and is appointed to EEEN11101 for 2026/27."
+          ]
+        },
+        {
+          "id": "process-control",
+          "title": "Guest Lecturer & Experiment Designer (Process Control)",
+          "date": "Jun. 2025 – Dec. 2025",
+          "organisation": "The University of Manchester",
+          "bullets": [
+            "Designed and built an MSc process-control laboratory: a PLC running PID control, linked to MATLAB/Simulink over OPC for real-time monitoring and analysis.",
+            "Delivered guest lectures on the underlying control theory and led the laboratory sessions."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "heading": "Education",
+      "entries": [
+        {
+          "id": "phd",
+          "title": "Doctor of Philosophy (in progress)",
+          "date": "Sept. 2024 – Present",
+          "organisation": "The University of Manchester"
+        },
+        {
+          "id": "beng",
+          "title": "BEng (Hons.) in Electronic Engineering — First Class Honours",
+          "date": "Sept. 2021 – Jun. 2024",
+          "organisation": "The University of Manchester"
+        }
+      ]
+    },
+    {
+      "id": "awards",
+      "heading": "Awards",
+      "entries": [
+        {
+          "id": "iai-finalist",
+          "title": "Best Paper Award Finalist — IAI 2026",
+          "date": "2026",
+          "organisation": "8th International Conference on Industrial Artificial Intelligence"
+        },
+        {
+          "id": "hackabot-third",
+          "title": "Third Prize — Hack-a-Bot Robotics Challenge",
+          "date": "2026",
+          "organisation": "UoM RoboSoc"
+        },
+        {
+          "id": "dtdsf",
+          "title": "Doctoral Training and Development Support Fund (DTDSF)",
+          "date": "2026",
+          "organisation": "The University of Manchester"
+        },
+        {
+          "id": "poster-first",
+          "title": "First Place Poster Prize — EEE Postgraduate Research Conference",
+          "date": "2025",
+          "organisation": "The University of Manchester"
+        },
+        {
+          "id": "hackabot-first",
+          "title": "First Prize — Hack-a-Bot Robotics Challenge",
+          "date": "2025",
+          "organisation": "UoM RoboSoc & Sony"
+        },
+        {
+          "id": "puzzlethon-second",
+          "title": "Second Prize — NVIDIA PuzzleThon",
+          "date": "2023"
+        },
+        {
+          "id": "buggy-third",
+          "title": "Third Prize — ESP Buggy Development",
+          "date": "2023"
+        }
+      ]
+    },
+    {
+      "id": "service",
+      "heading": "Service",
+      "entries": [
+        {
+          "id": "peer-review-service",
+          "title": "Peer Reviewer",
+          "date": "May–Oct. 2026",
+          "organisation": "TIMC · IEEE TAES · JACA 2026",
+          "bullets": [
+            "Reviewed five manuscripts: one each for IEEE Transactions on Aerospace and Electronic Systems and TIMC, and three for JACA 2026."
+          ]
+        },
+        {
+          "id": "phd-representative",
+          "title": "EEE PGR Representative",
+          "date": "Oct. 2024 – Present",
+          "organisation": "The University of Manchester",
+          "bullets": [
+            "Leads the department’s PGR representatives for 2025/26, consolidating feedback from doctoral researchers and teaching assistants and raising it with the department and the Doctoral Academy."
+          ]
+        },
+        {
+          "id": "student-ambassador",
+          "title": "Student & PGR Ambassador",
+          "date": "Oct. 2024 – Present",
+          "organisation": "The University of Manchester",
+          "bullets": [
+            "Represents the University at open days and outreach events, presenting engineering programmes and student life and running robotics demonstrations in the laboratories."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "heading": "Skills",
+      "entries": [
+        {
+          "id": "skill-0",
+          "title": "Research Methods",
+          "bullets": [
+            "Bayesian estimation and dual control; experimental design; Monte Carlo and ablation studies; statistical analysis and optimisation; literature synthesis, academic writing and peer review."
+          ]
+        },
+        {
+          "id": "skill-1",
+          "title": "Programming",
+          "bullets": [
+            "C/C++; Python (NumPy, SciPy, pandas, Matplotlib); MATLAB; R; JavaScript/TypeScript; SQL; PIC18 assembly; PLC (Ladder Logic, SCL); Bash; HTML/CSS; Linux."
+          ]
+        },
+        {
+          "id": "skill-2",
+          "title": "Control & Robotics",
+          "bullets": [
+            "PID, distributed and consensus control; formation control; active source seeking; A* and Pure Pursuit; multi-robot coordination; ROS; OpenCV/ArUco visual localisation."
+          ]
+        },
+        {
+          "id": "skill-3",
+          "title": "Modelling & Simulation",
+          "bullets": [
+            "MATLAB/Simulink; LabVIEW/NI myDAQ; PLECS; Multisim; Tanner T-Spice/SPICE; ANSYS."
+          ]
+        },
+        {
+          "id": "skill-4",
+          "title": "Hardware & Embedded Systems",
+          "bullets": [
+            "STM32/Mbed; PIC18F8722; ESP32/ESP8266; Arduino; Xilinx FPGA/VHDL; PCB prototyping; bare-metal and RTOS firmware."
+          ]
+        },
+        {
+          "id": "skill-9",
+          "title": "Teaching & Assessment",
+          "bullets": [
+            "Laboratory and tutorial teaching; control and robotics demonstrations; coursework and examination marking; technical feedback on student projects."
+          ]
+        }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Contact",
+    "profiles": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/Daihaolin201"
+      },
+      {
+        "label": "LinkedIn",
+        "href": "https://www.linkedin.com/in/donglin-li-55424326b"
+      },
+      {
+        "label": "ORCID",
+        "href": "https://orcid.org/0009-0007-2130-4862"
+      },
+      {
+        "label": "Google Scholar",
+        "href": "https://scholar.google.com/citations?user=mBr54wEAAAAJ"
+      }
+    ]
+  },
+  "emailLabel": "Email"
+}

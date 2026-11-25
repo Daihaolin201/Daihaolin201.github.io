@@ -1,0 +1,212 @@
+---
+// The CV as a web page and as print / PDF. Everything comes from the same data as the home page
+// (en.json / zh.json, projects.ts, projectContent.ts), so the two cannot drift apart.
+import ToolPage from './ToolPage.astro';
+import english from '../data/en.json';
+import chinese from '../data/zh.json';
+import { publicEmail, entryLinks } from '../data/publicLinks';
+import { PROJECTS } from '../data/projects';
+import { projectContent } from '../data/projectContent';
+import { role, personSchema, jsonLd } from '../data/profile';
+import type { Language } from '../data/siteTools';
+
+interface Props { lang: Language }
+const { lang } = Astro.props;
+const zh = lang === 'zh';
+const page = zh ? chinese : english;
+const tx = (en: string, cn: string) => (zh ? cn : en);
+type Entry = { id: string; title: string; date?: string; organisation?: string; authors?: string; citation?: string; status?: string; bullets?: string[] };
+const sec = (id: string) => page.sections.find(s => s.id === id)!;
+const entries = (id: string) => sec(id).entries as Entry[];
+const self = (name: string) => name === 'D. Li' || name === 'Donglin Li';
+const linkOf = (id: string) => entryLinks[id]?.href;
+const home = new URL(zh ? '/zh/' : '/', Astro.site);
+const cvUrl = new URL(zh ? '/zh/cv/' : '/cv/', Astro.site);
+const short = (href: string) => href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+const content = projectContent(lang);
+const projects = PROJECTS.map(m => content.find(c => c.id === m.id)!);
+const title = zh ? '简历' : 'CV';
+const description = zh
+  ? '李栋林的简历：教育、研究、论文、经历、项目、荣誉、服务与技能。'
+  : 'CV of Donglin (Dennis) Li: education, research, publications, experience, projects, awards, service and skills.';
+const structured = jsonLd({ '@type': 'ProfilePage', url: cvUrl.href, inLanguage: page.lang, name: title, mainEntity: personSchema(Astro.site, lang, english.contact.profiles) });
+---
+<ToolPage tool="cv" lang={lang} title={title} description={description}>
+  <script slot="head" type="application/ld+json" set:html={structured} />
+  <div class="cv-bar">
+    <button type="button" class="cv-print" data-print hidden>
+      <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5.5 7V2.5h9V7M5.5 14.5h-2a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v5.5a1 1 0 0 1-1 1h-2"/><path d="M5.5 11.5h9v6h-9z"/></svg>
+      {tx('Print or save as PDF', '打印或存为 PDF')}
+    </button>
+    <a href="/publications.bib" download="donglin-li-publications.bib">{tx('Publications as BibTeX', '论文 BibTeX')}</a>
+    <a href={zh ? '/zh/#projects' : '/#projects'}>{tx('Projects with demos', '项目与试玩')}</a>
+    <span class="cv-updated">{page.updated}</span>
+  </div>
+
+  <article class="cv" aria-labelledby="cv-name">
+    <header class="cv-head">
+      <div>
+        <h1 id="cv-name">{page.name}</h1>
+        <p class="cv-role">{role[lang]}</p>
+      </div>
+      <ul class="cv-contact">
+        <li><a href={'mailto:' + publicEmail}>{publicEmail}</a></li>
+        <li><a href={home.href}>{short(home.href)}</a></li>
+        {page.contact.profiles.map(p => <li><span class="k">{p.label}</span> <a href={p.href}>{short(p.href)}</a></li>)}
+      </ul>
+    </header>
+
+    <section class="cv-sec">
+      <h2>{tx('Profile', '概况')}</h2>
+      <div><p class="cv-lead">{page.headline}</p><p>{page.intro}</p></div>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('education').heading}</h2>
+      <ol class="cv-rows">
+        {entries('education').map(e => <li><div class="cv-line"><h3>{e.title}</h3><time>{e.date}</time></div>{e.organisation && <p class="cv-org">{e.organisation}</p>}</li>)}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('research').heading}</h2>
+      <ol class="cv-rows">
+        {entries('research').map(e => <li><div class="cv-line"><h3>{e.title}</h3><time>{e.date}</time></div><p class="cv-org">{e.organisation}</p><ul class="cv-points">{e.bullets?.map(b => <li>{b}</li>)}</ul></li>)}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('publications').heading}</h2>
+      <ol class="cv-pubs">
+        {entries('publications').map(e => (
+          <li>
+            <span class="cv-authors">{e.authors?.split(', ').map((n, i) => <>{i > 0 && ', '}{self(n) ? <strong>{n}</strong> : n}</>)}</span>{zh ? '. ' : ', '}
+            {linkOf(e.id) ? <a href={linkOf(e.id)}>{zh ? e.title : '“' + e.title + ',”'}</a> : <span>{zh ? e.title : '“' + e.title + ',”'}</span>}{zh ? '. ' : ' '}
+            <em>{e.citation}</em> <span class="cv-status">{e.organisation}{e.status && ' · ' + e.status}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('employment').heading}</h2>
+      <ol class="cv-rows">
+        {entries('employment').map(e => <li><div class="cv-line"><h3>{e.title}</h3><time>{e.date}</time></div>{e.organisation && <p class="cv-org">{e.organisation}</p>}<ul class="cv-points">{e.bullets?.map(b => <li>{b}</li>)}</ul></li>)}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('projects').heading}</h2>
+      <ol class="cv-rows cv-projects">
+        {projects.map(p => (
+          <li>
+            <div class="cv-line"><h3>{p.title}</h3><time>{p.date}</time></div>
+            <p class="cv-org">{p.context}{(p.award || p.role) && <span class="cv-marks">{[p.award, p.role].filter(Boolean).join(' · ')}</span>}</p>
+            {p.part && <p><b>{tx('My part: ', '负责：')}</b>{p.part}</p>}
+            <p class="cv-stack"><b>{tx('Built with: ', '技术栈：')}</b>{p.stack.join(' · ')}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('awards').heading}</h2>
+      <ol class="cv-rows cv-tight">
+        {entries('awards').map(e => <li><div class="cv-line"><h3>{e.title}</h3><time>{e.date}</time></div>{e.organisation && <p class="cv-org">{e.organisation}</p>}</li>)}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('service').heading}</h2>
+      <ol class="cv-rows">
+        {entries('service').map(e => <li><div class="cv-line"><h3>{e.title}</h3><time>{e.date}</time></div>{e.organisation && <p class="cv-org">{e.organisation}</p>}<ul class="cv-points">{e.bullets?.map(b => <li>{b}</li>)}</ul></li>)}
+      </ol>
+    </section>
+
+    <section class="cv-sec">
+      <h2>{sec('skills').heading}</h2>
+      <dl class="cv-skills">
+        {entries('skills').map(e => <><dt>{e.title}</dt><dd>{e.bullets?.join(' ')}</dd></>)}
+      </dl>
+    </section>
+
+    <footer class="cv-foot">{page.updated} · <a href={cvUrl.href}>{short(cvUrl.href)}</a></footer>
+  </article>
+</ToolPage>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-print]');
+  if (button && typeof window.print === 'function') {
+    button.hidden = false;
+    button.addEventListener('click', () => window.print());
+  }
+</script>
+
+<style>
+  .cv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; margin: 0 auto 1.1rem; max-width: 52rem; font-size: .92rem; }
+  .cv-print { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1.1rem; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 650; cursor: pointer; }
+  .cv-print[hidden] { display: none; }
+  .cv-print:hover { filter: brightness(1.08); }
+  .cv-updated { margin-left: auto; color: var(--faint); font-size: .85rem; }
+
+  .cv { max-width: 52rem; margin: 0 auto; padding: clamp(1.4rem, 4vw, 3rem); border: 1px solid var(--edge); border-radius: 16px; background: var(--panel); box-shadow: var(--panel-shadow); color: var(--text); }
+  .cv-head { padding-bottom: 1.1rem; border-bottom: 2px solid var(--accent); }
+  .cv h1 { margin: 0; font: 600 clamp(1.8rem, 4vw, 2.4rem)/1.1 var(--serif); letter-spacing: -.01em; }
+  .cv-role { margin: .4rem 0 0; color: var(--muted); }
+  .cv-contact { list-style: none; margin: .8rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .15rem 1.3rem; font-size: .86rem; }
+  .cv-contact li { overflow-wrap: anywhere; }
+  .cv-contact .k { color: var(--faint); }
+  .cv a { color: var(--link); text-decoration-color: var(--edge-strong); }
+
+  .cv-sec { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 1.4rem; padding: 1.25rem 0; border-bottom: 1px solid var(--edge); }
+  .cv-sec:last-of-type { border-bottom: 0; }
+  .cv-sec > h2 { margin: 0; font: 600 .82rem/1.6 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  :lang(zh-CN) .cv-sec > h2 { letter-spacing: .2em; font-size: .9rem; }
+  .cv-sec p { margin: .25rem 0 0; font-size: .94rem; color: var(--muted); }
+  .cv-sec p:first-child { margin-top: 0; }
+  .cv-lead { font: 500 1.05rem/1.4 var(--serif); color: var(--text) !important; }
+  .cv-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+  .cv-tight { gap: .55rem; }
+  .cv-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .1rem 1rem; }
+  .cv h3 { margin: 0; font: 600 1rem/1.4 var(--sans); }
+  .cv time { color: var(--faint); font-size: .86rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cv-org { color: var(--muted); }
+  .cv-marks { margin-left: .6rem; color: var(--ink, var(--text)); font-weight: 600; }
+  .cv-marks::before { content: "· "; color: var(--faint); font-weight: 400; }
+  .cv-sec b { color: var(--text); font-weight: 600; }
+  .cv-stack { font-size: .86rem !important; overflow-wrap: break-word; }
+  .cv-points { margin: .35rem 0 0; padding-left: 1.1rem; display: grid; gap: .25rem; color: var(--muted); font-size: .94rem; }
+  .cv-pubs { margin: 0; padding-left: 1.4rem; display: grid; gap: .8rem; font-size: .94rem; color: var(--muted); }
+  .cv-pubs strong { color: var(--text); }
+  .cv-pubs a { color: var(--text); overflow-wrap: break-word; }
+  :lang(zh-CN) .cv-pubs em { font-style: normal; }
+  .cv-status { display: block; color: var(--faint); font-size: .85rem; }
+  .cv-skills { margin: 0; display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: .5rem 1rem; font-size: .94rem; }
+  .cv-skills dt { font-weight: 600; }
+  .cv-skills dd { margin: 0; color: var(--muted); overflow-wrap: break-word; }
+  .cv-foot { margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid var(--edge); color: var(--faint); font-size: .82rem; }
+
+  @media (max-width: 640px) {
+    .cv-updated { margin-left: 0; width: 100%; }
+    .cv-sec { grid-template-columns: minmax(0, 1fr); gap: .6rem; }
+    .cv-skills { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+    .cv-skills dd { margin-bottom: .5rem; }
+  }
+
+  /* Print and "Save as PDF": black on white, A4, no page chrome, entries kept whole. */
+  @page { size: A4; margin: 16mm 15mm 16mm; }
+  @media print {
+    :global(:root), :global(:root[data-theme]) { color-scheme: light !important; background: #fff !important; }
+    :global(body) { background: #fff !important; color: #111; }
+    :global(.mast), :global(.skip), .cv-bar { display: none !important; }
+    :global(.tool-main) { padding: 0 !important; width: auto !important; }
+    .cv { --text: #111; --muted: #333; --faint: #555; --accent: #0b4f63; --link: #111; --edge: #ccc; --edge-strong: #999; --ink: #111;
+      max-width: none; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; font-size: 10pt; line-height: 1.45; }
+    .cv h1 { font-size: 20pt; }
+    .cv a { text-decoration: none; }
+    .cv-sec { grid-template-columns: 30mm minmax(0, 1fr); gap: 5mm; padding: 3.2mm 0; }
+    .cv-sec p, .cv-points, .cv-pubs, .cv-skills { font-size: 9.5pt; }
+    .cv-rows > li, .cv-pubs > li, .cv-skills dd, .cv-head { break-inside: avoid; }
+    .cv-sec > h2, .cv-skills dt, .cv-line { break-after: avoid; }
+  }
+</style>

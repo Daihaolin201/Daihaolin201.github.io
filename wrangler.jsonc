@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "donglin-li-homepage",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "404-page"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "HUB", "class_name": "Hub" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Hub"] }],
+  "send_email": [{ "name": "NOTIFY" }],
+  "vars": {
+    "RP_ID": "donglinli.com",
+    "ORIGIN": "https://donglinli.com",
+    "NOTIFY_FROM": "site@donglinli.com",
+    "PUSH_URL": "https://notify.donglinli.com/api/publish",
+    "PGR_ORIGIN": "https://pgr.donglinli.com"
+  },
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "donglinli.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.donglinli.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "pgr.donglinli.com",
+      "custom_domain": true
+    }
+  ]
+}

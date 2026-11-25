@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-uom/
+.astro/
+.wrangler/
+.omx/
+.omc/
+.DS_Store
+.env
+.env.*
+.dev.vars*
+
+# local working notes
+HANDOFF.md

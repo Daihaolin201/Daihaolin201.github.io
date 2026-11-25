@@ -1,0 +1,315 @@
+---
+import ToolPage from './ToolPage.astro';
+import { cart, controls, initialGains, payloadOptions, plotGeometry, runCart } from '../lib/pid';
+
+interface Props { lang: 'en' | 'zh' }
+const { lang } = Astro.props;
+const copy = {
+  en: {
+    scenario: 'Scenario', rail: 'Rail cart', mona: 'MONA delivery', payload: 'Payload', compare: 'Overlay empty cart',
+    empty: 'Empty', loaded: 'Loaded', run: 'Run', resultCount: 'of 2 on target',
+    deliveryText: 'Stop at the delivery bay, then carry a heavier parcel with the same gains. Simulation based on the MONA delivery task, with a 1 kg empty cart.',
+    title: 'PID tuning challenge', description: 'Bring a cart to the 1 m mark. Settle within 3 seconds and keep overshoot at or below 5%.',
+    response: 'Step response', position: 'Position (m)', time: 'Time (s)', actual: 'Cart', target: 'Target',
+    gains: 'Controller gains', controlLabels: ['Proportional', 'Integral', 'Derivative'],
+    overshoot: 'Overshoot', settling: 'Settling time', unsettled: 'Unsettled', pass: 'Target met', fail: 'Keep tuning',
+    share: 'Share settings', reset: 'Reset gains', shareDone: 'Link copied', shareManual: 'Copy this link', model: 'How the cart works',
+    modelText: 'A 1 kg cart moves along a rail against a constant 0.5 N load and viscous drag of 0.65 N·s/m. The motor can push or brake with up to 7 N. The controller starts from rest and tracks a 1 m step for 12 seconds.',
+    tip: 'Kp pulls the cart towards the target. Ki builds force against the steady load. Kd brakes the cart as it gains speed.',
+    criterion: 'Settling time is the first instant after which the cart stays between 0.98 and 1.02 m for the rest of the run, with at least 0.5 s left to observe.',
+    chartLabel: 'Simulated cart position and 1 m target over 12 seconds.',
+    noJs: 'Enable JavaScript to tune the gains and share a run.'
+  },
+  zh: {
+    scenario: '场景', rail: '轨道小车', mona: 'MONA 配送', payload: '货物质量', compare: '叠加空载曲线',
+    empty: '空载', loaded: '载货', run: '工况', resultCount: '/ 2 组达标',
+    deliveryText: '小车须停在配送站，再以同一组参数运送更重的货物。仿真取材于 MONA 配送赛题，空车质量 1 kg。',
+    title: 'PID 调参挑战', description: '目标：小车停在 1 米处，3 秒内稳定，超调量不超过 5%。',
+    response: '阶跃响应', position: '位置（m）', time: '时间（s）', actual: '小车位置', target: '目标位置',
+    gains: '控制器参数', controlLabels: ['比例', '积分', '微分'],
+    overshoot: '超调量', settling: '调节时间', unsettled: '未稳定', pass: '挑战达成', fail: '继续调参',
+    share: '分享这组参数', reset: '重置参数', shareDone: '链接已复制', shareManual: '复制此链接', model: '小车模型与判定规则',
+    modelText: '小车质量为 1 kg，沿轨道运动时受到 0.5 N 的恒定反向载荷和 0.65 N·s/m 的黏性阻尼。电机最大推力和制动力均为 7 N。小车从静止出发，目标位置为 1 m，每次仿真持续 12 秒。',
+    tip: '比例项按距离偏差施加推力，积分项逐渐补偿恒定载荷，微分项根据车速提前制动。',
+    criterion: '小车进入 0.98 至 1.02 m 后，若一直保持到仿真结束，首次持续进入的时刻即为调节时间。进入后至少观察 0.5 秒。',
+    chartLabel: '小车在 12 秒内的模拟位置，以及 1 米目标线。',
+    noJs: '需启用 JavaScript 以调整参数和分享结果。'
+  }
+}[lang];
+const result = runCart(initialGains);
+const plot = plotGeometry(result.positions);
+---
+<ToolPage tool="pid" lang={lang} title={copy.title} description={copy.description}>
+  <section id="pid-simulator" class="pid-bench" aria-label={copy.title}
+    data-cart={copy.actual} data-loaded={copy.loaded} data-result-count={copy.resultCount}
+    data-pass={copy.pass} data-fail={copy.fail} data-unsettled={copy.unsettled} data-copied={copy.shareDone}>
+    <div class="scenario-bar">
+      <label class="pick">{copy.scenario}<select id="pid-scenario">
+        <option value="rail">{copy.rail}</option><option value="mona">{copy.mona}</option>
+      </select></label>
+      <div id="pid-delivery-options" hidden>
+        <label class="pick">{copy.payload}<select id="pid-payload">
+          {payloadOptions.map(kg => <option value={kg} selected={kg === 0.5}>{kg} kg</option>)}
+        </select></label>
+        <label class="compare-toggle"><input id="pid-compare" type="checkbox" checked />{copy.compare}</label>
+      </div>
+      <p id="pid-delivery-text" hidden>{copy.deliveryText}</p>
+    </div>
+    <section class="pid-scope screen">
+      <header class="panel-head"><h2>{copy.response}</h2><span class="run-status" data-passed={String(result.passed)}>{result.passed ? copy.pass : copy.fail}</span></header>
+      <div class="plot-caption"><span>{copy.position}</span><div class="legend"><span class="key-actual" id="pid-legend-primary">{copy.actual}</span><span class="key-empty" hidden>{copy.empty}</span><span class="key-target">{copy.target}</span></div></div>
+      <figure class="waveform" aria-label={copy.chartLabel}>
+        <div class="y-labels">{plot.ticks.map(tick => <span style={'top:' + tick.y + '%'}>{tick.value}</span>)}</div>
+        <div class="plot-field">
+          <svg class="plot-svg" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs><linearGradient id="pid-fill" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0%" stop-color="#52e6e4" stop-opacity=".14"/><stop offset="100%" stop-color="#52e6e4" stop-opacity="0"/></linearGradient></defs>
+            {[0, 2, 4, 6, 8, 10, 12].map(time => <line class="guide" x1={time / cart.duration * 100} y1="0" x2={time / cart.duration * 100} y2="100"/>)}
+            <g id="pid-grid-y">{plot.ticks.map(tick => <line class="guide" x1="0" y1={tick.y} x2="100" y2={tick.y}/>)}</g>
+            <rect id="pid-band" x="0" y={plot.bandY} width="100" height={plot.bandHeight} fill="#ffc787" opacity=".14"/>
+            <path id="pid-area" fill="url(#pid-fill)" d={plot.path + ' L100 100 L0 100 Z'}/>
+            <line id="pid-reference" class="reference-line" x1="0" x2="100" y1={plot.targetY} y2={plot.targetY}/>
+            <path id="pid-trace" class="trace" d={plot.path}/>
+            <path id="pid-trace-empty" class="trace empty-trace" d=""/>
+          </svg>
+        </div>
+        <div class="x-labels">{[0, 2, 4, 6, 8, 10, 12].map(time => <span>{time}</span>)}</div>
+        <figcaption>{copy.time}</figcaption>
+      </figure>
+      <div class="readouts" aria-live="polite" aria-atomic="true">
+        <div><span>{copy.overshoot}</span><strong id="pid-overshoot">{result.overshoot.toFixed(1)}%</strong></div>
+        <div><span>{copy.settling}</span><strong id="pid-settling">{result.settling === null ? copy.unsettled : result.settling.toFixed(2) + ' s'}</strong></div>
+      </div>
+      <table class="comparison-metrics" hidden aria-live="polite" aria-atomic="true">
+        <thead><tr><th scope="col">{copy.run}</th><th scope="col">{copy.overshoot}</th><th scope="col">{copy.settling}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">{copy.empty}</th><td id="pid-empty-overshoot"></td><td id="pid-empty-settling"></td></tr>
+          <tr><th scope="row" id="pid-loaded-label">{copy.loaded}</th><td id="pid-loaded-overshoot"></td><td id="pid-loaded-settling"></td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="gain-panel">
+      <h2>{copy.gains}</h2>
+      <div class="knobs">{controls.map(({key, symbol, max, initial}, i) => (
+        <div class="gain">
+          <label for={'pid-' + key}><span class="gain-name"><span class="symbol">{symbol}</span>{copy.controlLabels[i]}</span><output for={'pid-' + key} id={'value-' + key}>{initial.toFixed(1)}</output></label>
+          <input id={'pid-' + key} type="range" min="0" max={max} step="0.1" value={initial} style={'--filled:' + initial / max * 100 + '%'}/>
+        </div>
+      ))}</div>
+      <p class="tip">{copy.tip}</p>
+      <div class="action-row"><button id="pid-share" type="button">{copy.share}</button><button id="pid-reset" type="button">{copy.reset}</button></div>
+      <span class="copy-status" role="status" id="pid-share-status"></span>
+      <label id="pid-manual" hidden>{copy.shareManual}<input type="text" readonly id="pid-url" /></label>
+      <noscript>{copy.noJs}</noscript>
+    </section>
+    <details class="model-info"><summary>{copy.model}</summary><p>{copy.modelText}</p><p>{copy.criterion}</p></details>
+  </section>
+</ToolPage>
+
+<script>
+  import { controls, initialGains, plotGeometry, readGains, readScenario, writeScenario, runCart, type Gains } from '../lib/pid';
+  const bench = document.querySelector<HTMLElement>('#pid-simulator')!;
+  const get = <E extends Element>(selector: string) => bench.querySelector<E>(selector)!;
+  let scenario = readScenario(new URLSearchParams(location.search));
+  const scenarioInput = get<HTMLSelectElement>('#pid-scenario');
+  const payloadInput = get<HTMLSelectElement>('#pid-payload');
+  const compareInput = get<HTMLInputElement>('#pid-compare');
+  const urlFor = (gains: Gains) => {
+    const url = new URL(location.href);
+    for (const { key } of controls) url.searchParams.set(key, gains[key].toFixed(1));
+    writeScenario(url.searchParams, scenario);
+    return url;
+  };
+  function redraw(gains: Gains) {
+    for (const { key, max } of controls) {
+      const input = get<HTMLInputElement>('#pid-' + key);
+      input.value = String(gains[key]);
+      input.style.setProperty('--filled', gains[key] / max * 100 + '%');
+      get<HTMLOutputElement>('#value-' + key).value = gains[key].toFixed(1);
+    }
+    scenarioInput.value = scenario.mona ? 'mona' : 'rail';
+    payloadInput.value = String(scenario.payload);
+    compareInput.checked = scenario.compare;
+    get<HTMLElement>('#pid-delivery-options').hidden = !scenario.mona;
+    get<HTMLElement>('#pid-delivery-text').hidden = !scenario.mona;
+
+    const run = runCart(gains, scenario.mona ? scenario.payload : 0);
+    const empty = scenario.mona && scenario.compare ? runCart(gains) : null;
+    const { path, comparisonPath, ticks, targetY, bandY, bandHeight } = plotGeometry(run.positions, empty?.positions);
+    const loadedLabel = bench.dataset.loaded + ' (+' + scenario.payload + ' kg)';
+    get('#pid-legend-primary').textContent = scenario.mona ? loadedLabel : bench.dataset.cart!;
+    get<HTMLElement>('.key-empty').hidden = !empty;
+    get('#pid-trace-empty').setAttribute('d', comparisonPath);
+    const grid = get('#pid-grid-y'), labels = get('.y-labels');
+    grid.replaceChildren();
+    labels.replaceChildren();
+    for (const { value, y } of ticks) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('class', 'guide');
+      line.setAttribute('x1', '0'); line.setAttribute('x2', '100');
+      line.setAttribute('y1', String(y)); line.setAttribute('y2', String(y));
+      grid.append(line);
+      const label = document.createElement('span');
+      label.textContent = String(value);
+      label.style.top = y + '%';
+      labels.append(label);
+    }
+    get('#pid-area').setAttribute('d', path + ' L100 100 L0 100 Z');
+    get('#pid-trace').setAttribute('d', path);
+    get('#pid-reference').setAttribute('y1', String(targetY));
+    get('#pid-reference').setAttribute('y2', String(targetY));
+    get('#pid-band').setAttribute('y', String(bandY));
+    get('#pid-band').setAttribute('height', String(bandHeight));
+    const settlingText = (seconds: number | null) => seconds === null ? bench.dataset.unsettled! : seconds.toFixed(2) + ' s';
+    const overshootText = (amount: number) => amount.toFixed(1) + '%';
+    get<HTMLElement>('.readouts').hidden = !!empty;
+    get<HTMLTableElement>('.comparison-metrics').hidden = !empty;
+    get('#pid-overshoot').textContent = overshootText(run.overshoot);
+    get('#pid-settling').textContent = settlingText(run.settling);
+    if (empty) {
+      get('#pid-empty-overshoot').textContent = overshootText(empty.overshoot);
+      get('#pid-empty-settling').textContent = settlingText(empty.settling);
+      get('#pid-loaded-label').textContent = loadedLabel;
+      get('#pid-loaded-overshoot').textContent = overshootText(run.overshoot);
+      get('#pid-loaded-settling').textContent = settlingText(run.settling);
+    }
+    const status = get<HTMLElement>('.run-status');
+    status.dataset.passed = String(run.passed && (!empty || empty.passed));
+    status.textContent = empty
+      ? (Number(run.passed) + Number(empty.passed)) + ' ' + bench.dataset.resultCount
+      : run.passed ? bench.dataset.pass! : bench.dataset.fail!;
+  }
+  let current = readGains(new URLSearchParams(location.search));
+  redraw(current);
+  function apply(gains: Gains) {
+    current = gains;
+    redraw(current);
+    get('#pid-share-status').textContent = '';
+    get<HTMLElement>('#pid-manual').hidden = true;
+  }
+  for (const { key } of controls) {
+    const input = get<HTMLInputElement>('#pid-' + key);
+    input.addEventListener('input', () => apply({ ...current, [key]: input.valueAsNumber }));
+    input.addEventListener('change', () => history.replaceState(history.state, '', urlFor(current)));
+  }
+  for (const field of [scenarioInput, payloadInput, compareInput]) {
+    field.addEventListener('change', () => {
+      scenario = { mona: scenarioInput.value === 'mona', payload: Number(payloadInput.value), compare: compareInput.checked };
+      apply(current);
+      history.replaceState(history.state, '', urlFor(current));
+    });
+  }
+  get('#pid-reset').addEventListener('click', () => {
+    apply({ ...initialGains });
+    history.replaceState(history.state, '', urlFor(current));
+  });
+  get('#pid-share').addEventListener('click', async () => {
+    const url = urlFor(current).href;
+    try {
+      await navigator.clipboard.writeText(url);
+      get('#pid-share-status').textContent = bench.dataset.copied!;
+    } catch {
+      get<HTMLElement>('#pid-manual').hidden = false;
+      const field = get<HTMLInputElement>('#pid-url');
+      field.value = url;
+      field.focus();
+      field.select();
+    }
+  });
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(location.search);
+    current = readGains(params);
+    scenario = readScenario(params);
+    redraw(current);
+    get('#pid-share-status').textContent = '';
+    get<HTMLElement>('#pid-manual').hidden = true;
+  });
+</script>
+
+<style>
+  .pid-bench { --aqua: #59e4dc; --amber: #ffcc8e; color: var(--text); display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(245px, 1fr); gap: 16px; align-items: stretch; }
+  .pid-bench *, .pid-bench *::before, .pid-bench *::after { box-sizing: border-box; }
+  .pid-scope, .gain-panel, .model-info { border: 1px solid var(--edge); border-radius: 16px; background: var(--panel); box-shadow: var(--panel-shadow); min-width: 0; }
+  .pid-scope, .gain-panel { padding: clamp(16px, 2.5vw, 28px); }
+  .pid-bench h2 { font: 600 1.15rem/1.3 var(--serif); margin: 0; color: var(--text); }
+  .panel-head, .plot-caption, .legend, .gain label, .gain-name, .action-row { display: flex; align-items: center; }
+  .panel-head, .plot-caption, .gain label { justify-content: space-between; gap: 10px; }
+  .run-status { font-size: .8rem; font-weight: 600; line-height: 1.25; border-radius: 99px; padding: 6px 11px; background: #332e26; color: var(--amber); white-space: nowrap; border: 1px solid #5c4c39; }
+  .run-status[data-passed="true"] { color: var(--aqua); background: #11383b; border-color: #275d5b; }
+  .run-status[data-passed="true"]::before { content: "✓ "; }
+  .plot-caption, .waveform figcaption { font-size: .8rem; line-height: 1.4; color: var(--muted); }
+  .plot-caption { margin: 22px 0 12px; flex-wrap: wrap; }
+  .legend { gap: 13px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend span::before { content: ''; width: 15px; border-top: 2px solid var(--aqua); }
+  .legend .key-target::before { border-top: 2px dashed var(--amber); }
+  .waveform { --axis: 2.35rem; display: grid; grid-template-columns: var(--axis) minmax(0, 1fr); grid-template-rows: clamp(200px, 21vw, 285px) auto auto; gap: 5px 0; margin: 0; }
+  .y-labels { grid-column: 1; position: relative; }
+  .y-labels :global(span), .x-labels { color: var(--muted); font-size: .75rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .y-labels :global(span) { position: absolute; right: 7px; transform: translateY(-50%); }
+  .plot-field { background: #091523; position: relative; border-radius: 3px; }
+  .plot-svg { display: block; width: 100%; height: 100%; }
+  .plot-svg :global(line), .trace { vector-effect: non-scaling-stroke; }
+  .plot-svg :global(.guide) { stroke: #2b394b; stroke-width: 1; }
+  .reference-line { stroke: var(--amber); stroke-width: 1.5; stroke-dasharray: 5 5; }
+  .trace { stroke: var(--aqua); stroke-width: 2.8; stroke-linejoin: round; stroke-linecap: round; fill: none; }
+  .x-labels { grid-column: 2; position: relative; height: 12px; }
+  .x-labels span { position: absolute; transform: translateX(-50%); }
+  .x-labels span:nth-child(2) { left: 16.6667%; } .x-labels span:nth-child(3) { left: 33.3333%; }
+  .x-labels span:nth-child(4) { left: 50%; } .x-labels span:nth-child(5) { left: 66.6667%; }
+  .x-labels span:nth-child(6) { left: 83.3333%; } .x-labels span:last-child { left: 100%; }
+  .waveform figcaption { grid-column: 2; justify-self: end; }
+  .readouts { margin-top: 18px; border-top: 1px solid var(--edge); padding-top: 16px; display: grid; grid-template-columns: 1fr 1fr; }
+  .readouts > div { display: grid; gap: 6px; }
+  .readouts > div + div { padding-left: 18px; border-left: 1px solid var(--edge); }
+  .readouts span { color: var(--muted); font-size: .88rem; }
+  .readouts strong { color: var(--text); font: 650 clamp(1.3rem, 2.5vw, 1.75rem)/1.15 var(--sans); font-variant-numeric: tabular-nums; }
+  .pid-bench [hidden] { display: none !important; }
+  .scenario-bar { grid-column: 1/-1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
+  .pick, .compare-toggle { display: inline-flex; align-items: center; gap: 9px; font-size: .92rem; font-weight: 600; color: var(--text); }
+  .pick select { min-height: 44px; border: 1px solid var(--edge-strong); border-radius: 8px; padding: 0 .6rem; font-weight: 400; background: var(--sunk); color: var(--text); }
+  #pid-delivery-options { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .compare-toggle { min-height: 44px; cursor: pointer; font-weight: 400; }
+  .compare-toggle input { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; }
+  #pid-delivery-text { flex: 1 1 100%; margin: 0 0 .2rem; color: var(--muted); font-size: .94rem; line-height: 1.6; max-width: 80ch; }
+  .trace.empty-trace { stroke: #c4a8fc; stroke-dasharray: 2 5; stroke-width: 2.5; }
+  .legend .key-empty::before { border-top: 2px dotted #c4a8fc; }
+  .comparison-metrics { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: .9rem; }
+  .comparison-metrics th, .comparison-metrics td { padding: 8px 4px; border-top: 1px solid var(--edge); text-align: right; }
+  .comparison-metrics th:first-child { text-align: left; }
+  .comparison-metrics th { color: var(--muted); font-weight: 500; }
+  .comparison-metrics td { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .comparison-metrics tbody tr:first-child th { color: #c4a8fc; }
+  .comparison-metrics tbody tr:last-child th { color: var(--aqua); }
+  .gain-panel { display: flex; flex-direction: column; }
+  .knobs { display: grid; gap: 14px; margin: 22px 0 10px; }
+  .gain label { color: var(--muted); font-size: .88rem; }
+  .gain-name { gap: 10px; }
+  .symbol { color: var(--text); font: italic 600 1.08rem/1.3 var(--serif); }
+  .gain output { color: var(--accent); font-size: 1.05rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .gain input { display: block; width: 100%; height: 44px; appearance: none; background: transparent; margin: 0; cursor: pointer; accent-color: var(--accent); }
+  .gain input::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--accent) var(--filled), var(--edge-strong) var(--filled)); height: 4px; border-radius: 4px; }
+  .gain input::-moz-range-track { background: var(--edge-strong); height: 4px; border-radius: 4px; }
+  .gain input::-moz-range-progress { background: var(--accent); height: 4px; border-radius: 4px; }
+  .gain input::-webkit-slider-thumb { appearance: none; margin-top: -7px; width: 18px; height: 18px; border: 2px solid var(--sunk); border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .gain input::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid var(--sunk); border-radius: 50%; background: var(--accent); }
+  .tip { margin: 0 0 18px; color: var(--muted); font-size: .9rem; line-height: 1.65; }
+  .action-row { gap: 8px; flex-wrap: wrap; margin-top: auto; }
+  .pid-bench button { font-size: .9rem; font-weight: 600; line-height: 1.3; min-height: 44px; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+  #pid-share { color: var(--on-accent); background: var(--accent); border: 1px solid var(--accent); }
+  #pid-reset { color: var(--text); background: transparent; border: 1px solid var(--edge-strong); }
+  #pid-share:hover { filter: brightness(1.08); }
+  #pid-reset:hover { border-color: var(--accent); }
+  .pid-bench :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .copy-status, #pid-manual { color: var(--ok); font-size: .85rem; }
+  .copy-status:not(:empty), #pid-manual:not([hidden]) { display: block; margin-top: 8px; }
+  #pid-url { display: block; margin-top: 5px; width: 100%; padding: 8px; border: 1px solid var(--edge-strong); border-radius: 6px; color: var(--text); background: var(--sunk); }
+  .model-info { grid-column: 1/-1; padding: 0 20px; color: var(--muted); font-size: .92rem; }
+  .model-info summary { cursor: pointer; padding: .7rem 0; color: var(--text); width: fit-content; }
+  .model-info p { max-width: 80ch; margin: 0 0 12px; line-height: 1.65; }
+  @media (max-width: 760px) {
+    .pid-bench { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .waveform { --axis: 1.95rem; }
+    .gain-panel { padding-bottom: 18px; }
+    .knobs { margin: 16px 0 8px; gap: 5px; }
+  }
+</style>
