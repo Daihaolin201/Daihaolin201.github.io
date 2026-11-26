@@ -8,8 +8,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "build:uom": "node scripts/build-uom.mjs",
+    "build:latex": "node scripts/build-latex-cv.mjs",
+    "check:latex": "node scripts/build-latex-cv.mjs --check",
     "test": "node --test tests/*.test.mjs",
-    "check": "npm test && npm run build && npm run build:uom",
+    "check": "npm test && npm run build && npm run build:uom && npm run check:latex",
     "preview": "wrangler dev --local --ip 127.0.0.1 --port 4321",
     "deploy": "npm run build && wrangler deploy"
   },

@@ -36,6 +36,8 @@ Astro 源码分支为 `astro-site`。如以后启用 GitHub 自动部署，可�
 
 曼彻斯特大学 `public_html` 个人主页由 `scripts/build-uom.mjs` 从同一套公开数据（`en.json`/`zh.json`、`publicLinks.ts`、`publicationCitations.ts`、`projects.ts`、`projectContent.ts` 与 `public/images/avatar-256.jpg`）直接生成自包含的 `default.htm` 与 `default-zh.htm`（内联样式与 Base64 头像，中英文互链，无外部依赖）。运行 `npm run build:uom` 默认输出到 `dist-uom/`，也可传入 `--out-dir <目录>` 直接写入待上传目录。上传到曼大 P 盘 `public_html` 时只放这两份 `.htm` 文件。
 
+双语 LaTeX 简历由 `scripts/build-latex-cv.mjs` 从同一套核定公开数据（`en.json`/`zh.json`、`profile.ts`、`publicLinks.ts`、`publicationCitations.ts`、`projects.ts`、`projectContent.ts`）确定性生成到 `cv-latex/cv-en.tex` 与 `cv-latex/cv-zh.tex`。运行 `npm run build:latex` 重新生成（可加 `--compile` 用 XeLaTeX 临时编译校验），运行 `npm run check:latex`（已并入 `npm run check`）检查核定数据与 `.tex` 源码是否发生漂移。
+
 [Astro 部署指南](https://docs.astro.build/en/guides/deploy/cloudflare/) · [Cloudflare 静态托管计费](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/)
 
 ## 互动页面

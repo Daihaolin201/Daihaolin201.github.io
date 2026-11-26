@@ -12,3 +12,12 @@ dist-uom/
 
 # local working notes
 HANDOFF.md
+
+# LaTeX compilation artifacts (keep generated cv-latex/*.tex tracked)
+cv-latex/*.aux
+cv-latex/*.fdb_latexmk
+cv-latex/*.fls
+cv-latex/*.log
+cv-latex/*.out
+cv-latex/*.pdf
+cv-latex/*.synctex.gz
